@@ -6,7 +6,8 @@
 	"scripts": {
 		"lint": "eslint",
 		"dev": "tsx ./config/build/esbuild-dev.ts",
-		"build": "cross-env MODE=production tsx ./config/build/esbuild-prod.ts"
+		"build": "cross-env MODE=production tsx ./config/build/esbuild-prod.ts",
+		"prepare": "husky"
 	},
 	"keywords": [],
 	"author": "",
@@ -24,6 +25,8 @@
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-prettier": "^5.2.1",
 		"globals": "^15.8.0",
+		"husky": "^9.1.4",
+		"lint-staged": "^15.2.8",
 		"nodemon": "^3.1.4",
 		"prettier": "^3.3.3",
 		"tsx": "^4.16.5",
