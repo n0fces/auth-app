@@ -38,5 +38,15 @@
 	},
 	"overrides": {
 		"eslint": "^9.8.0"
+	},
+	"lint-staged": {
+		"src/**/*": [
+			"prettier --write",
+			"eslint"
+		],
+		"config/**/*": [
+			"prettier --write",
+			"eslint"
+		]
 	}
 }
