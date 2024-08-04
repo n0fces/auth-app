@@ -1,5 +1,6 @@
 import esbuild from 'esbuild';
 import config from './esbuild-config';
+import { devMessagingPlugin } from './plugins/dev-messaging-plugin';
 
 const ctx = await esbuild.context({
 	...config,
@@ -10,6 +11,7 @@ const ctx = await esbuild.context({
 		'process.env.SERVER_URL': '"http://localhost:5000"',
 		'process.env.CLIENT_URL': '"http://localhost:3000"',
 	},
+	plugins: config.plugins?.concat(devMessagingPlugin),
 });
 
 await ctx.watch();

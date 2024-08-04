@@ -1,6 +1,8 @@
 import path from 'path';
 import { BuildOptions } from 'esbuild';
-import { clearPlugin } from './plugins/clear-plugin';
+// import { clearPlugin } from './plugins/clear-plugin';
+import { startBuildPlugin } from './plugins/start-build-plugin';
+import { clean } from 'esbuild-plugin-clean';
 
 const dirname = import.meta.dirname;
 
@@ -20,7 +22,13 @@ const config: BuildOptions = {
 	outdir: resolveRoot('build'),
 	entryPoints: [resolveRoot('src', 'index.ts')],
 	entryNames: '[dir]/bundle.[name]-[hash]',
-	plugins: [clearPlugin],
+	plugins: [
+		clean({
+			patterns: ['build/*'],
+			sync: true,
+		}),
+		startBuildPlugin,
+	],
 };
 
 export default config;
