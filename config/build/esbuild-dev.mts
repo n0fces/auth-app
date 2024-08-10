@@ -1,12 +1,9 @@
 import esbuild from 'esbuild';
-import config from './esbuild-config';
+import config from './esbuild-config.mjs';
 import { devMessagingPlugin } from './plugins/dev-messaging-plugin';
 
 const ctx = await esbuild.context({
 	...config,
-	banner: {
-		js: 'new EventSource("/esbuild").addEventListener("change", () => location.reload());',
-	},
 	define: {
 		'process.env.SERVER_URL': '"http://localhost:5000"',
 		'process.env.CLIENT_URL': '"http://localhost:3000"',

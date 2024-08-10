@@ -1,5 +1,5 @@
 import esbuild from 'esbuild';
-import config from './esbuild-config';
+import config from './esbuild-config.mjs';
 
 const result = await esbuild.build({
 	...config,

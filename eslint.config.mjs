@@ -6,8 +6,10 @@ import eslintPluginPrettier from 'eslint-plugin-prettier';
 
 export default tseslint.config(
 	{
-		name: 'general',
 		ignores: ['node_modules/**/*', 'build/**/*'],
+	},
+	{
+		name: 'general',
 		...eslint.configs.recommended,
 		languageOptions: { globals: globals.node },
 	},

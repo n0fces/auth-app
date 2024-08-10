@@ -1,6 +1,5 @@
 import path from 'path';
 import { BuildOptions } from 'esbuild';
-// import { clearPlugin } from './plugins/clear-plugin';
 import { startBuildPlugin } from './plugins/start-build-plugin';
 import { clean } from 'esbuild-plugin-clean';
 
@@ -18,10 +17,12 @@ const config: BuildOptions = {
 	platform: 'node',
 	minify: isProd,
 	sourcemap: isDev,
+	target: ['es2015'],
+	format: 'cjs',
 	tsconfig: resolveRoot('tsconfig.json'),
 	outdir: resolveRoot('build'),
 	entryPoints: [resolveRoot('src', 'index.ts')],
-	entryNames: '[dir]/bundle.[name]-[hash]',
+	entryNames: isDev ? 'bundle' : '[dir]/bundle.[name]-[hash]',
 	plugins: [
 		clean({
 			patterns: ['build/*'],
