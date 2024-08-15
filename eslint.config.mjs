@@ -17,12 +17,12 @@ export default tseslint.config(
 		name: 'tseslint',
 		languageOptions: {
 			parserOptions: {
-				project: ['tsconfig.json'],
+				project: './tsconfig.json',
 				projectService: true,
 				tsconfigRootDir: import.meta.dirname,
 			},
 		},
-		files: ['src/**/*.{js,mjs,cjs,ts}', 'config/**/*.{js,mjs,cjs,ts}'],
+		files: ['src/**/*', 'config/**/*'],
 		extends: [
 			...tseslint.configs.strictTypeChecked,
 			...tseslint.configs.stylisticTypeChecked,
