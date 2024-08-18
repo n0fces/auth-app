@@ -3,12 +3,10 @@ import { query } from './query';
 
 class UserAPI {
 	async createUser(email: string, password: string) {
-		const result = await query<Pick<User, 'id_user'>>(
-			'INSERT INTO users (password, email) VALUES ($1, $2) RETURNING id_user',
-			[password, email],
-		);
-
-		return result.rows[0];
+		await query('INSERT INTO users (password, email) VALUES ($1, $2)', [
+			password,
+			email,
+		]);
 	}
 
 	async getUserByEmail(email: string) {

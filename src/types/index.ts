@@ -2,7 +2,13 @@ export interface User {
 	id_user: number;
 	password: string;
 	email: string;
-	is_activated_email: boolean;
+}
+
+export interface PendingUser {
+	email: string;
+	password: string;
+	token_expiration: Date;
+	activation_token: string;
 }
 
 export interface Token {

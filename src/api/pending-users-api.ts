@@ -1,0 +1,56 @@
+import { PendingUser } from 'types';
+import { query } from './query';
+
+class PendingUsersAPI {
+	// * ЗАЕБИСЬ
+	async createPendingUser(email: string, hashedPassword: string) {
+		const result = await query<Pick<PendingUser, 'activation_token'>>(
+			'INSERT INTO pending_users (email, password) VALUES ($1, $2) RETURNING activation_token',
+			[email, hashedPassword],
+		);
+
+		return result.rows[0].activation_token;
+	}
+
+	// * ЗАЕБИСЬ
+	async getPendingUserByEmail(email: string) {
+		const result = await query<Pick<PendingUser, 'email'>>(
+			'SELECT email FROM pending_users WHERE email = $1',
+			[email],
+		);
+
+		return result.rows.length === 0 ? null : result.rows[0].email;
+	}
+
+	// * ЗАЕБИСЬ
+	async updatePendingUserToken(email: string) {
+		const result = await query<Pick<PendingUser, 'activation_token'>>(
+			`UPDATE pending_users 
+			SET 
+				activation_token = uuid_generate_v4(),
+            	token_expiration = NOW() + INTERVAL '10 minutes' 
+			WHERE email = $1 
+			RETURNING activation_token`,
+			[email],
+		);
+
+		return result.rows[0].activation_token;
+	}
+
+	async getPendingUserByToken(activation_token: string) {
+		const result = await query<PendingUser>(
+			'SELECT * FROM pending_users WHERE activation_token = $1',
+			[activation_token],
+		);
+
+		return result.rows.length === 0 ? null : result.rows[0];
+	}
+
+	async deletePendingUser(activation_token: string) {
+		await query('DELETE FROM pending_users WHERE activation_token = $1', [
+			activation_token,
+		]);
+	}
+}
+
+export const pendingUsersAPI = new PendingUsersAPI();

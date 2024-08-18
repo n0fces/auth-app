@@ -4,12 +4,22 @@ WITH
 LIMIT
 	= -1 IS_TEMPLATE = False;
 
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 CREATE TABLE users (
 	id_user SERIAL PRIMARY KEY,
 	password VARCHAR(255) NOT NULL,
-	email VARCHAR(255) UNIQUE NOT NULL,
-	is_activated_email BOOLEAN DEFAULT false
+	email VARCHAR(255) UNIQUE NOT NULL
 );
+
+CREATE TABLE pending_users (
+	email VARCHAR(255) PRIMARY KEY NOT NULL,
+	password VARCHAR(255) NOT NULL,
+	token_expiration TIMESTAMP NOT NULL DEFAULT NOW () + INTERVAL '10 minutes',
+	activation_token UUID DEFAULT uuid_generate_v4 ()
+);
+
+CREATE INDEX idx_activation_token ON pending_users (activation_token);
 
 CREATE TABLE tokens (
 	id_token SERIAL PRIMARY KEY,
