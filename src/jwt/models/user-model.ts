@@ -1,10 +1,10 @@
-import { ClientError } from 'errors/client-error';
 import { pendingUsersAPI, tokenAPI, userAPI } from 'api';
 import bcrypt from 'bcryptjs';
 import 'dotenv/config';
-import { mailModel } from './mail-model';
-import { tokenService } from './token-model';
+import { ClientError } from 'errors/client-error';
 import { PendingUser } from 'types';
+import { mailModel } from './mail-model';
+import { tokenModel } from './token-model';
 
 class UserModel {
 	async registration(email: string, password: string) {
@@ -82,8 +82,8 @@ class UserModel {
 			const isPasswordValid = await bcrypt.compare(password, passwordBD);
 
 			if (isPasswordValid) {
-				const accessToken = tokenService.generateAccessToken(id_user, email);
-				const { refreshToken, caption } = tokenService.generateRefreshToken(
+				const accessToken = tokenModel.generateAccessToken(id_user, email);
+				const { refreshToken, caption } = tokenModel.generateRefreshToken(
 					id_user,
 					email,
 				);
@@ -96,6 +96,10 @@ class UserModel {
 		} else {
 			throw ClientError.UserNotFound();
 		}
+	}
+
+	async logout(refreshToken: string) {
+		await tokenModel.removeRefreshToken(refreshToken);
 	}
 }
 

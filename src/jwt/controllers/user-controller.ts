@@ -53,6 +53,12 @@ class UserController {
 
 	async logout(req: Request, res: Response, next: NextFunction) {
 		try {
+			const { refreshToken } = req.signedCookies;
+			await userModel.logout(refreshToken);
+			// * Я ведь храню в куках не только refreshToken, но и accessToken
+			res.clearCookie('refreshToken');
+			res.clearCookie('accessToken');
+			return res.sendStatus(200);
 		} catch (error) {
 			next(error);
 		}

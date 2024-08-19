@@ -1,8 +1,9 @@
+import { tokenAPI } from 'api';
 import 'dotenv/config';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { v4 } from 'uuid';
 
-class TokenService {
+class TokenModel {
 	private generatePayload(id_user: number, email: string) {
 		const caption = v4();
 
@@ -38,6 +39,10 @@ class TokenService {
 
 		return { refreshToken, caption };
 	}
+
+	async removeRefreshToken(refreshToken: string) {
+		await tokenAPI.removeTokenByToken(refreshToken);
+	}
 }
 
-export const tokenService = new TokenService();
+export const tokenModel = new TokenModel();
