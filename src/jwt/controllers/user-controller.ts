@@ -1,21 +1,32 @@
 import 'dotenv/config';
+import { ClientError } from 'errors/client-error';
 import { NextFunction, Request, Response } from 'express';
+import { validationResult } from 'express-validator';
 import { userModel } from 'jwt/models/user-model';
+
+const validationResultChecker = (req: Request, next: NextFunction) => {
+	const errors = validationResult(req);
+	if (errors.isEmpty()) {
+		return next(ClientError.BadRequest('Ошибка при валидации', errors.array()));
+	}
+};
 
 class UserController {
 	async registration(req: Request, res: Response, next: NextFunction) {
 		try {
+			validationResultChecker(req, next);
 			const { email, password } = req.body;
 			await userModel.registration(email, password);
 
 			res.sendStatus(200);
 		} catch (error) {
-			console.log(error);
+			next(error);
 		}
 	}
 
 	async login(req: Request, res: Response, next: NextFunction) {
 		try {
+			validationResultChecker(req, next);
 			const { email, password } = req.body;
 			const { accessToken, refreshToken } = await userModel.login(
 				email,
@@ -35,12 +46,16 @@ class UserController {
 			});
 
 			return res.redirect(process.env.CLIENT_URL as string);
-		} catch (error) {}
+		} catch (error) {
+			next(error);
+		}
 	}
 
 	async logout(req: Request, res: Response, next: NextFunction) {
 		try {
-		} catch (error) {}
+		} catch (error) {
+			next(error);
+		}
 	}
 
 	async activate(req: Request, res: Response, next: NextFunction) {
@@ -50,13 +65,7 @@ class UserController {
 
 			return res.redirect(`${process.env.CLIENT_URL}/login`);
 		} catch (error) {
-			// ! здесь надо обработать разные ошибки
-			// 1) ссылка активации устарела
-			// делать редирект на страницу с кнопкой, при нажатии на которую на почту будет отправлено повторное письмо с ссылкой активации
-			// return res.redirect(`${process.env.CLIENT_URL}/resend-activation-link/${activationLink}`);
-			// 2) ссылка активации недействительна
-			// редирект на главную страницу приложения
-			// return res.redirect(`${process.env.CLIENT_URL}`);
+			next(error);
 		}
 	}
 
@@ -70,19 +79,32 @@ class UserController {
 				`${process.env.CLIENT_URL}/resend-activation-link-sent`,
 			);
 		} catch (error) {
-			console.log(error);
+			next(error);
 		}
 	}
 
+	// * для обновления access токена
+	async access(req: Request, res: Response, next: NextFunction) {
+		try {
+		} catch (error) {
+			next(error);
+		}
+	}
+
+	// * здесь нужно иметь в виду, что это роут для обновления рефреш токена
 	async refresh(req: Request, res: Response, next: NextFunction) {
 		try {
-		} catch (error) {}
+		} catch (error) {
+			next(error);
+		}
 	}
 
 	async getUsers(req: Request, res: Response, next: NextFunction) {
 		try {
 			res.json(['123', '456']);
-		} catch (error) {}
+		} catch (error) {
+			next(error);
+		}
 	}
 }
 

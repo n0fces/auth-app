@@ -1,10 +1,10 @@
-import express from 'express';
-import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import cors from 'cors';
+import 'dotenv/config';
+import express from 'express';
+import { errorMiddleware } from 'middlewares/error-middleware';
 import { pool } from './db';
 import { router } from './routes';
-
-import 'dotenv/config';
 
 const app = express();
 
@@ -16,6 +16,7 @@ app.use(cookieParser(process.env.COOKIE_PARSER_SECRET));
 app.use(cors());
 // /api - маршрут, по которому будет отрабатывать роутер
 app.use('/api', router);
+app.use(errorMiddleware);
 
 const start = async () => {
 	try {

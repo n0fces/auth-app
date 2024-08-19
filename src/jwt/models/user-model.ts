@@ -1,3 +1,4 @@
+import { ClientError } from 'errors/client-error';
 import { pendingUsersAPI, tokenAPI, userAPI } from 'api';
 import bcrypt from 'bcryptjs';
 import 'dotenv/config';
@@ -10,9 +11,7 @@ class UserModel {
 		// Проверка того, что пользователь уже существует
 		const candidate = await userAPI.getUserByEmail(email);
 		if (candidate) {
-			throw new Error(
-				`Пользователь с почтовым адресом ${email} уже существует`,
-			);
+			throw ClientError.handleUserAlreadyRegistered();
 		}
 
 		// Проверка того, что пользователь первый раз проходит регистрацию
@@ -52,15 +51,12 @@ class UserModel {
 				await pendingUsersAPI.deletePendingUser(activationLink);
 				await userAPI.createUser(email, password);
 			} else {
-				throw new Error('Ссылка активации устарела');
-				// * в контроллерее будем редиректить пользователя на страницу, где будет кнопка, при нажатии
-				// * на которую на почту будет отправлено повторное письмо с ссылкой активации
+				throw ClientError.ActivationLinkExpiredError();
 			}
 		} else {
-			throw new Error(
+			throw ClientError.BadRequest(
 				'Сбой активации: аккаунт уже активирован или ссылка активации недействительна',
 			);
-			// * после этой ошибки будем делать редирект в контроллере на главную страницу приложения
 		}
 	}
 
@@ -81,9 +77,9 @@ class UserModel {
 	async login(email: string, password: string) {
 		const user = await userAPI.getUserByEmail(email);
 		if (user) {
-			const { id_user } = user;
+			const { id_user, password: passwordBD } = user;
 
-			const isPasswordValid = await bcrypt.compare(password, user.password);
+			const isPasswordValid = await bcrypt.compare(password, passwordBD);
 
 			if (isPasswordValid) {
 				const accessToken = tokenService.generateAccessToken(id_user, email);
@@ -95,10 +91,10 @@ class UserModel {
 
 				return { accessToken, refreshToken };
 			} else {
-				throw new Error('Неправильный пароль');
+				throw ClientError.WrongPassword();
 			}
 		} else {
-			throw new Error('Пользователь с таким email не найден');
+			throw ClientError.UserNotFound();
 		}
 	}
 }
