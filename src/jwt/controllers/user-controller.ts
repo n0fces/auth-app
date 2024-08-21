@@ -1,15 +1,8 @@
 import 'dotenv/config';
-import { ClientError } from 'errors/client-error';
 import { NextFunction, Request, Response } from 'express';
-import { validationResult } from 'express-validator';
 import { userModel } from 'jwt/models/user-model';
-
-const validationResultChecker = (req: Request, next: NextFunction) => {
-	const errors = validationResult(req);
-	if (errors.isEmpty()) {
-		return next(ClientError.BadRequest('Ошибка при валидации', errors.array()));
-	}
-};
+import { setCookie } from 'utils/setCookie';
+import { validationResultChecker } from 'utils/validationResultChecker';
 
 class UserController {
 	async registration(req: Request, res: Response, next: NextFunction) {
@@ -28,22 +21,14 @@ class UserController {
 		try {
 			validationResultChecker(req, next);
 			const { email, password } = req.body;
+			const userAgent = req.headers['user-agent'];
 			const { accessToken, refreshToken } = await userModel.login(
 				email,
 				password,
+				userAgent,
 			);
 
-			// если используем https, то можно также добавить опцию secure
-			// ! возможно придется еще ставить опцию samesite для обеспечения безопасности от межсайтовых атак
-			// ! опция path
-			res.cookie('refreshToken', refreshToken, {
-				maxAge: Number(process.env.REFRESH_TOKEN_LIFE),
-				httpOnly: true,
-			});
-			res.cookie('accessToken', accessToken, {
-				maxAge: Number(process.env.ACCESS_TOKEN_LIFE),
-				httpOnly: true,
-			});
+			setCookie(res, accessToken, refreshToken);
 
 			return res.redirect(process.env.CLIENT_URL as string);
 		} catch (error) {
@@ -58,7 +43,7 @@ class UserController {
 			// * Я ведь храню в куках не только refreshToken, но и accessToken
 			res.clearCookie('refreshToken');
 			res.clearCookie('accessToken');
-			return res.sendStatus(200);
+			return res.redirect(process.env.CLIENT_URL as string);
 		} catch (error) {
 			next(error);
 		}
@@ -100,6 +85,17 @@ class UserController {
 	// * здесь нужно иметь в виду, что это роут для обновления рефреш токена
 	async refresh(req: Request, res: Response, next: NextFunction) {
 		try {
+			const { refreshToken: refresh } = req.signedCookies;
+			const userAgent = req.headers['user-agent'];
+			const { accessToken, refreshToken } = await userModel.refresh(
+				refresh,
+				userAgent,
+			);
+
+			setCookie(res, accessToken, refreshToken);
+
+			// * пока на шару поставил такой ответ от сервера
+			res.sendStatus(200);
 		} catch (error) {
 			next(error);
 		}

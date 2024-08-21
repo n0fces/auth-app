@@ -2,10 +2,15 @@ import { Token } from 'types';
 import { query } from './query';
 
 class TokenAPI {
-	async createToken(id_user: number, token: string, caption: string) {
+	async createToken(
+		id_user: number,
+		token: string,
+		caption: string,
+		userAgentDB: string,
+	) {
 		await query(
-			'INSERT INTO tokens (id_user, token, caption) VALUES ($1, $2, $3)',
-			[id_user, token, caption],
+			'INSERT INTO tokens (id_user, token, caption, userAgentDB) VALUES ($1, $2, $3, $4)',
+			[id_user, token, caption, userAgentDB],
 		);
 	}
 	async getUserByUserId(id_user: number) {

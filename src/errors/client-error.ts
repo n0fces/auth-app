@@ -1,3 +1,4 @@
+// ! ВСЕ ЭТИ ОШИБКИ НЕОБХОДИМО ПРАВИЛЬНО ОБРАБАТЫВАТЬ НА КЛИЕНТЕ!
 export class ClientError extends Error {
 	status: number;
 	errors: any[];
@@ -43,6 +44,13 @@ export class ClientError extends Error {
 		return new ClientError(
 			404,
 			'Учетная запись не найдена. Пожалуйста, проверьте введенные данные или зарегистрируйтесь',
+		);
+	}
+
+	static TooManyResendRequests() {
+		return new ClientError(
+			429,
+			'Вы привысили количество попыток получить новую ссылку на активации. Пожалуйста, пройдите регистрацию еще раз',
 		);
 	}
 

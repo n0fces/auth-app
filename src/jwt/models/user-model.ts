@@ -5,6 +5,7 @@ import { ClientError } from 'errors/client-error';
 import { PendingUser } from 'types';
 import { mailModel } from './mail-model';
 import { tokenModel } from './token-model';
+import { getUA } from 'utils/getUA';
 
 class UserModel {
 	async registration(email: string, password: string) {
@@ -51,7 +52,13 @@ class UserModel {
 				await pendingUsersAPI.deletePendingUser(activationLink);
 				await userAPI.createUser(email, password);
 			} else {
-				throw ClientError.ActivationLinkExpiredError();
+				const youCanGetNewLink =
+					await pendingUsersAPI.updateResendExpiration(email);
+				if (youCanGetNewLink) {
+					throw ClientError.ActivationLinkExpiredError();
+				} else {
+					throw ClientError.TooManyResendRequests();
+				}
 			}
 		} else {
 			throw ClientError.BadRequest(
@@ -74,7 +81,7 @@ class UserModel {
 		);
 	}
 
-	async login(email: string, password: string) {
+	async login(email: string, password: string, userAgent: string | undefined) {
 		const user = await userAPI.getUserByEmail(email);
 		if (user) {
 			const { id_user, password: passwordBD } = user;
@@ -82,12 +89,14 @@ class UserModel {
 			const isPasswordValid = await bcrypt.compare(password, passwordBD);
 
 			if (isPasswordValid) {
+				const uaJSON = getUA(userAgent);
 				const accessToken = tokenModel.generateAccessToken(id_user, email);
-				const { refreshToken, caption } = tokenModel.generateRefreshToken(
-					id_user,
-					email,
-				);
-				await tokenAPI.createToken(id_user, refreshToken, caption);
+				const {
+					refreshToken,
+					caption,
+					userAgent: userAgentDB,
+				} = tokenModel.generateRefreshToken(id_user, email, uaJSON);
+				await tokenAPI.createToken(id_user, refreshToken, caption, userAgentDB);
 
 				return { accessToken, refreshToken };
 			} else {
@@ -100,6 +109,28 @@ class UserModel {
 
 	async logout(refreshToken: string) {
 		await tokenModel.removeRefreshToken(refreshToken);
+	}
+
+	async refresh(refreshToken: any, userAgent: string | undefined) {
+		const tokenData = tokenModel.verifyRefreshToken(refreshToken);
+
+		if (tokenData) {
+			const { sub, email } = tokenData;
+			const id_user = Number(sub as string);
+			const uaJSON = getUA(userAgent);
+			const accessToken = tokenModel.generateAccessToken(id_user, email);
+			const { refreshToken } = tokenModel.generateRefreshToken(
+				id_user,
+				email,
+				uaJSON,
+			);
+
+			await tokenAPI.updateTokenByUserId(id_user, refreshToken);
+
+			return { accessToken, refreshToken };
+		} else {
+			throw ClientError.UnauthorizedError();
+		}
 	}
 }
 

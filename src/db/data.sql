@@ -16,7 +16,9 @@ CREATE TABLE pending_users (
 	email VARCHAR(255) PRIMARY KEY NOT NULL,
 	password VARCHAR(255) NOT NULL,
 	token_expiration TIMESTAMP NOT NULL DEFAULT NOW () + INTERVAL '10 minutes',
-	activation_token UUID DEFAULT uuid_generate_v4 ()
+	activation_token UUID NOT NULL DEFAULT uuid_generate_v4 (),
+	resend_expiration TIMESTAMP NOT NULL DEFAULT NOW () + INTERVAL '1 day',
+	resend_limit INTEGER DEFAULT 3
 );
 
 CREATE INDEX idx_activation_token ON pending_users (activation_token);
@@ -25,7 +27,8 @@ CREATE TABLE tokens (
 	id_token SERIAL PRIMARY KEY,
 	id_user INTEGER REFERENCES users (id_user) NOT NULL,
 	token TEXT UNIQUE NOT NULL,
-	caption TEXT NOT NULL
+	caption TEXT NOT NULL,
+	userAgentDB TEXT NOT NULL
 );
 
 CREATE INDEX idx_user_id ON tokens (id_user);

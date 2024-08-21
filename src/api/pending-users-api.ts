@@ -28,7 +28,7 @@ class PendingUsersAPI {
 			`UPDATE pending_users 
 			SET 
 				activation_token = uuid_generate_v4(),
-            	token_expiration = NOW() + INTERVAL '10 minutes' 
+				token_expiration = NOW() + INTERVAL '10 minutes' 
 			WHERE email = $1 
 			RETURNING activation_token`,
 			[email],
@@ -44,6 +44,22 @@ class PendingUsersAPI {
 		);
 
 		return result.rows.length === 0 ? null : result.rows[0];
+	}
+
+	async updateResendExpiration(email: string) {
+		const result = await query<Pick<PendingUser, 'email'>>(
+			`
+			UPDATE pending_users
+			SET 
+				resend_expiration = NOW() + INTERVAL '1 day',
+				resend_limit = resend_limit - 1
+			WHERE
+				email = $1 AND resend_limit > 0
+			RETURNING email`,
+			[email],
+		);
+
+		return result.rows.length > 0;
 	}
 
 	async deletePendingUser(activation_token: string) {
