@@ -28,7 +28,7 @@ class UserController {
 				userAgent,
 			);
 
-			setCookie(res, accessToken, refreshToken);
+			setCookie({ res, accessToken, refreshToken });
 
 			return res.redirect(process.env.CLIENT_URL as string);
 		} catch (error) {
@@ -77,6 +77,13 @@ class UserController {
 	// * для обновления access токена
 	async access(req: Request, res: Response, next: NextFunction) {
 		try {
+			const { refreshToken: refresh } = req.signedCookies;
+			const accessToken = await userModel.updateAccess(refresh);
+
+			setCookie({ res, accessToken });
+
+			// * пока на шару поставил такой ответ от сервера
+			res.sendStatus(200);
 		} catch (error) {
 			next(error);
 		}
@@ -87,23 +94,15 @@ class UserController {
 		try {
 			const { refreshToken: refresh } = req.signedCookies;
 			const userAgent = req.headers['user-agent'];
-			const { accessToken, refreshToken } = await userModel.refresh(
+			const { accessToken, refreshToken } = await userModel.updateRefresh(
 				refresh,
 				userAgent,
 			);
 
-			setCookie(res, accessToken, refreshToken);
+			setCookie({ res, accessToken, refreshToken });
 
 			// * пока на шару поставил такой ответ от сервера
 			res.sendStatus(200);
-		} catch (error) {
-			next(error);
-		}
-	}
-
-	async getUsers(req: Request, res: Response, next: NextFunction) {
-		try {
-			res.json(['123', '456']);
 		} catch (error) {
 			next(error);
 		}

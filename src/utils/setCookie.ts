@@ -1,19 +1,29 @@
 import { Response } from 'express';
 
-export const setCookie = (
-	res: Response,
-	accessToken: string,
-	refreshToken: string,
-) => {
+interface setCookieProps {
+	res: Response;
+	accessToken?: string;
+	refreshToken?: string;
+}
+
+export const setCookie = ({
+	res,
+	accessToken,
+	refreshToken,
+}: setCookieProps) => {
 	// если используем https, то можно также добавить опцию secure
 	// ! возможно придется еще ставить опцию samesite для обеспечения безопасности от межсайтовых атак
 	// ! опция path
-	res.cookie('refreshToken', refreshToken, {
-		maxAge: Number(process.env.REFRESH_TOKEN_LIFE),
-		httpOnly: true,
-	});
-	res.cookie('accessToken', accessToken, {
-		maxAge: Number(process.env.ACCESS_TOKEN_LIFE),
-		httpOnly: true,
-	});
+	if (refreshToken) {
+		res.cookie('refreshToken', refreshToken, {
+			maxAge: Number(process.env.REFRESH_TOKEN_LIFE),
+			httpOnly: true,
+		});
+	}
+	if (accessToken) {
+		res.cookie('accessToken', accessToken, {
+			maxAge: Number(process.env.ACCESS_TOKEN_LIFE),
+			httpOnly: true,
+		});
+	}
 };

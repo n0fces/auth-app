@@ -7,6 +7,7 @@ import { mailModel } from './mail-model';
 import { tokenModel } from './token-model';
 import { getUA } from 'utils/getUA';
 
+// ! очень надо разгрузить эту модель
 class UserModel {
 	async registration(email: string, password: string) {
 		// Проверка того, что пользователь уже существует
@@ -81,6 +82,10 @@ class UserModel {
 		);
 	}
 
+	// ! нужно либо на клиенсткой стороне, либо здесь предусмотреть момент, что уже
+	// ! залогиненный клиент может зачем-то перейти на страницу логина и еще раз
+	// ! попробовать это сделать. Либо надо запрещать этот роут для залогиненных пользователей на клиенте,
+	// ! либо здесь оформлять эту логику
 	async login(email: string, password: string, userAgent: string | undefined) {
 		const user = await userAPI.getUserByEmail(email);
 		if (user) {
@@ -111,23 +116,45 @@ class UserModel {
 		await tokenModel.removeRefreshToken(refreshToken);
 	}
 
-	async refresh(refreshToken: any, userAgent: string | undefined) {
+	async updateRefresh(refresh: any, userAgent: string | undefined) {
+		const tokenData = tokenModel.verifyRefreshToken(refresh);
+
+		if (tokenData) {
+			const { sub, email, jti } = tokenData;
+			const id_user = Number(sub as string);
+			const uaJSON = getUA(userAgent);
+
+			const tokens = await tokenAPI.getUserByUserId(id_user);
+			const tokenSession = tokens.find((token) => token.token === refresh);
+			const isEqualUserAgent = tokenSession?.userAgentDB === uaJSON;
+			const isEqualCaption = tokenSession?.caption === jti;
+			if (isEqualUserAgent && isEqualCaption) {
+				const accessToken = tokenModel.generateAccessToken(id_user, email);
+				const { refreshToken } = tokenModel.generateRefreshToken(
+					id_user,
+					email,
+					uaJSON,
+				);
+
+				await tokenAPI.updateTokenByUserId(id_user, refreshToken);
+
+				return { accessToken, refreshToken };
+			} else {
+				throw ClientError.ForbiddenError();
+			}
+		} else {
+			throw ClientError.UnauthorizedError();
+		}
+	}
+
+	async updateAccess(refreshToken: any) {
 		const tokenData = tokenModel.verifyRefreshToken(refreshToken);
 
 		if (tokenData) {
 			const { sub, email } = tokenData;
 			const id_user = Number(sub as string);
-			const uaJSON = getUA(userAgent);
 			const accessToken = tokenModel.generateAccessToken(id_user, email);
-			const { refreshToken } = tokenModel.generateRefreshToken(
-				id_user,
-				email,
-				uaJSON,
-			);
-
-			await tokenAPI.updateTokenByUserId(id_user, refreshToken);
-
-			return { accessToken, refreshToken };
+			return accessToken;
 		} else {
 			throw ClientError.UnauthorizedError();
 		}

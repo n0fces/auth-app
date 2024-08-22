@@ -54,6 +54,13 @@ export class ClientError extends Error {
 		);
 	}
 
+	static ForbiddenError() {
+		return new ClientError(
+			403,
+			'Неправильная сессия или скомпроментированный рефреш токен',
+		);
+	}
+
 	static BadRequest(message: string, errors: any[] = []) {
 		return new ClientError(400, message, errors);
 	}
