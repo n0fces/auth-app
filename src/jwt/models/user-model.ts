@@ -23,17 +23,13 @@ class UserModel {
 			await pendingUsersAPI.getPendingUserByEmail(email);
 
 		let activationLink: string;
-		if (candidatePendingUser) {
-			// пользователь уже есть в таблице pending_users, поэтому просто изменим токен активации и отдадим его
-			activationLink = await pendingUsersAPI.updatePendingUserToken(email);
-		} else {
-			// Пользователь первый раз проходит регистрацию, поэтому создаем его в таблице pending_users
-			const hashedPassword = await bcrypt.hash(password, 10);
-			activationLink = await pendingUsersAPI.createPendingUser(
-				email,
-				hashedPassword,
-			);
-		}
+		// здесь необходимо еще пробросить пароль, потому что пользователь может начать регистрацию
+		// на одном устройстве, а потом начать ее проходить на другом, причем пароль он, возможно,
+		// напишет другой
+		const hashedPassword = await bcrypt.hash(password, 10);
+		activationLink = candidatePendingUser
+			? await pendingUsersAPI.updatePendingUserToken(email, hashedPassword)
+			: await pendingUsersAPI.createPendingUser(email, hashedPassword);
 
 		// отправляем письмо с ссылкой активации на указанную почту
 		await mailModel.sendActivationMail(

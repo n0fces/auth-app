@@ -2,7 +2,6 @@ import { PendingUser } from 'types';
 import { query } from './query';
 
 class PendingUsersAPI {
-	// * ЗАЕБИСЬ
 	async createPendingUser(email: string, hashedPassword: string) {
 		const result = await query<Pick<PendingUser, 'activation_token'>>(
 			'INSERT INTO pending_users (email, password) VALUES ($1, $2) RETURNING activation_token',
@@ -12,7 +11,6 @@ class PendingUsersAPI {
 		return result.rows[0].activation_token;
 	}
 
-	// * ЗАЕБИСЬ
 	async getPendingUserByEmail(email: string) {
 		const result = await query<Pick<PendingUser, 'email'>>(
 			'SELECT email FROM pending_users WHERE email = $1',
@@ -22,16 +20,21 @@ class PendingUsersAPI {
 		return result.rows.length === 0 ? null : result.rows[0].email;
 	}
 
-	// * ЗАЕБИСЬ
-	async updatePendingUserToken(email: string) {
-		const result = await query<Pick<PendingUser, 'activation_token'>>(
-			`UPDATE pending_users 
+	async updatePendingUserToken(email: string, hashedPassword?: string) {
+		const queryText = `
+			UPDATE pending_users 
 			SET 
+				${hashedPassword ? 'password = $2,' : ''}
 				activation_token = uuid_generate_v4(),
-				token_expiration = NOW() + INTERVAL '10 minutes' 
+				token_expiration = NOW() + INTERVAL '10 minutes'
 			WHERE email = $1 
-			RETURNING activation_token`,
-			[email],
+			RETURNING activation_token`;
+
+		const values = hashedPassword ? [email, hashedPassword] : [email];
+
+		const result = await query<Pick<PendingUser, 'activation_token'>>(
+			queryText,
+			values,
 		);
 
 		return result.rows[0].activation_token;
