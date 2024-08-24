@@ -47,11 +47,11 @@ class UserModel {
 			await pendingUsersAPI.getPendingUserByToken(activationLink);
 
 		if (pendingUser) {
-			const { email, password, token_expiration } = pendingUser;
+			const { id_user, email, password, token_expiration } = pendingUser;
 
 			if (token_expiration >= new Date()) {
 				await pendingUsersAPI.deletePendingUser(activationLink);
-				await userAPI.createUser(email, password);
+				await userAPI.createUser(id_user, email, password);
 			} else {
 				const youCanGetNewLink =
 					await pendingUsersAPI.updateResendExpiration(email);

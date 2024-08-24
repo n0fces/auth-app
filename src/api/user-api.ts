@@ -2,11 +2,11 @@ import { User } from 'types';
 import { query } from './query';
 
 class UserAPI {
-	async createUser(email: string, password: string) {
-		await query('INSERT INTO users (password, email) VALUES ($1, $2)', [
-			password,
-			email,
-		]);
+	async createUser(id_user: number, email: string, password: string) {
+		await query(
+			'INSERT INTO users (id_user, email, password) VALUES ($1, $2, $3)',
+			[id_user, email, password],
+		);
 	}
 
 	async getUserByEmail(email: string) {

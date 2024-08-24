@@ -6,7 +6,7 @@ const ctx = await esbuild.context({
 	...config,
 	define: {
 		'process.env.SERVER_URL': '"http://localhost:5000"',
-		'process.env.CLIENT_URL': '"http://localhost:3000"',
+		'process.env.CLIENT_URL': '"http://localhost:5173"',
 	},
 	plugins: config.plugins?.concat(devMessagingPlugin),
 });

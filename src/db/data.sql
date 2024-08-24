@@ -7,13 +7,14 @@ LIMIT
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE users (
-	id_user SERIAL PRIMARY KEY,
+	id_user PRIMARY KEY,
 	password VARCHAR(255) NOT NULL,
 	email VARCHAR(255) UNIQUE NOT NULL
 );
 
 CREATE TABLE pending_users (
-	email VARCHAR(255) PRIMARY KEY NOT NULL,
+	id_user SERIAL PRIMARY KEY,
+	email VARCHAR(255) UNIQUE NOT NULL,
 	password VARCHAR(255) NOT NULL,
 	token_expiration TIMESTAMP NOT NULL DEFAULT NOW () + INTERVAL '10 minutes',
 	activation_token UUID NOT NULL DEFAULT uuid_generate_v4 (),

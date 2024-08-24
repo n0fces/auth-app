@@ -5,6 +5,7 @@ export interface User {
 }
 
 export interface PendingUser {
+	id_user: number;
 	email: string;
 	password: string;
 	token_expiration: Date;
