@@ -8,10 +8,8 @@ export interface PendingUser {
 	id_user: number;
 	email: string;
 	password: string;
-	token_expiration: Date;
 	activation_token: string;
 	resend_expiration: Date;
-	resend_limit: number;
 }
 
 export interface Token {
@@ -19,5 +17,7 @@ export interface Token {
 	id_user: number;
 	token: string;
 	caption: string;
-	userAgentDB: string;
+	user_agent: string;
+	created_at: Date;
+	updated_at: Date;
 }

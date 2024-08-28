@@ -21,10 +21,7 @@ router.post(
 );
 router.post('/logout', userController.logout);
 router.get('/activate/:link', userController.activate);
-router.get(
-	'/resend-activation-link/:link',
-	userController.resendActivationLink,
-);
+router.get('/resend-activation-link', userController.resendActivationLink);
 // * отдельный роут для получения access токена
 router.get('/access', userController.access);
 // * отдельный роут для получения refresh токена

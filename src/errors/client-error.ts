@@ -19,7 +19,7 @@ export class ClientError extends Error {
 		);
 	}
 
-	static handleUserAlreadyRegistered() {
+	static UserAlreadyExisted() {
 		return new ClientError(
 			409,
 			'Вы уже зарегистрированы. Пожалуйста, войдите в свою учетную запись',
@@ -29,7 +29,7 @@ export class ClientError extends Error {
 	static ActivationLinkExpiredError() {
 		return new ClientError(
 			410,
-			'Ссылка для активации устарела. Пожалуйста, получите новую ссылку на активацию',
+			'Ссылка для активации устарела. Пожалуйста, активируйте аккаунт по последней ссылке активации',
 		);
 	}
 
@@ -44,13 +44,6 @@ export class ClientError extends Error {
 		return new ClientError(
 			404,
 			'Учетная запись не найдена. Пожалуйста, проверьте введенные данные или зарегистрируйтесь',
-		);
-	}
-
-	static TooManyResendRequests() {
-		return new ClientError(
-			429,
-			'Вы привысили количество попыток получить новую ссылку на активации. Пожалуйста, пройдите регистрацию еще раз',
 		);
 	}
 

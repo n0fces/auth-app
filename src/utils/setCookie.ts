@@ -1,16 +1,16 @@
 import { Response } from 'express';
 
-interface setCookieProps {
+interface setCookieTokensProps {
 	res: Response;
 	accessToken?: string;
 	refreshToken?: string;
 }
 
-export const setCookie = ({
+export const setCookieTokens = ({
 	res,
 	accessToken,
 	refreshToken,
-}: setCookieProps) => {
+}: setCookieTokensProps) => {
 	// если используем https, то можно также добавить опцию secure
 	// ! возможно придется еще ставить опцию samesite для обеспечения безопасности от межсайтовых атак
 	// ! опция path

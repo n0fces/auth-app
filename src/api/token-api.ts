@@ -22,15 +22,19 @@ class TokenAPI {
 		return result.rows;
 	}
 
-	async removeTokenByToken(token: string) {
-		await query('DELETE FROM tokens WHERE token = $1', [token]);
+	async removeTokenByUserId(id_user: string) {
+		await query('DELETE FROM tokens WHERE id_user = $1', [id_user]);
 	}
 
 	async updateTokenByUserId(id_user: number, newToken: string) {
-		await query('UPDATE tokens SET token = $1 WHERE id_user = $2', [
-			newToken,
-			id_user,
-		]);
+		await query(
+			`
+			UPDATE tokens 
+			SET token = $1 
+				updated_at = NOW()
+			WHERE id_user = $2`,
+			[newToken, id_user],
+		);
 	}
 }
 

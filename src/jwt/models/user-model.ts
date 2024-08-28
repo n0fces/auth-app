@@ -2,10 +2,9 @@ import { pendingUsersAPI, tokenAPI, userAPI } from 'api';
 import bcrypt from 'bcryptjs';
 import 'dotenv/config';
 import { ClientError } from 'errors/client-error';
-import { PendingUser } from 'types';
+import { getUA } from 'utils/getUA';
 import { mailModel } from './mail-model';
 import { tokenModel } from './token-model';
-import { getUA } from 'utils/getUA';
 
 // ! очень надо разгрузить эту модель
 class UserModel {
@@ -13,7 +12,7 @@ class UserModel {
 		// Проверка того, что пользователь уже существует
 		const candidate = await userAPI.getUserByEmail(email);
 		if (candidate) {
-			throw ClientError.handleUserAlreadyRegistered();
+			throw ClientError.UserAlreadyExisted();
 		}
 
 		// Проверка того, что пользователь первый раз проходит регистрацию
@@ -22,66 +21,80 @@ class UserModel {
 		const candidatePendingUser =
 			await pendingUsersAPI.getPendingUserByEmail(email);
 
-		let activationLink: string;
 		// здесь необходимо еще пробросить пароль, потому что пользователь может начать регистрацию
 		// на одном устройстве, а потом начать ее проходить на другом, причем пароль он, возможно,
 		// напишет другой
 		const hashedPassword = await bcrypt.hash(password, 10);
-		activationLink = candidatePendingUser
-			? await pendingUsersAPI.updatePendingUserToken(email, hashedPassword)
-			: await pendingUsersAPI.createPendingUser(email, hashedPassword);
+		const activationToken = tokenModel.generateActivationToken(email);
+		candidatePendingUser
+			? await pendingUsersAPI.updatePendingUserToken(
+					email,
+					activationToken,
+					hashedPassword,
+				)
+			: await pendingUsersAPI.createPendingUser(
+					email,
+					activationToken,
+					hashedPassword,
+				);
 
 		// отправляем письмо с ссылкой активации на указанную почту
 		await mailModel.sendActivationMail(
 			email,
-			`${process.env.SERVER_URL}/api/activate/${activationLink}`,
+			`${process.env.SERVER_URL}/api/activate/${activationToken}`,
 		);
 	}
 
-	async activate(activationLink: string) {
-		const pendingUser =
-			await pendingUsersAPI.getPendingUserByToken(activationLink);
+	// * этот метод нужно очень качественно задокументировать
+	async activate(activationToken: string, userAgent: string | undefined) {
+		const payload = tokenModel.verifyActivationToken(activationToken);
+		if (payload) {
+			const { email } = payload;
+			const pendingUser = await pendingUsersAPI.getPendingUserByEmail(email);
+			if (pendingUser) {
+				const { id_user, email, password, activation_token } = pendingUser;
 
-		if (pendingUser) {
-			const { id_user, email, password, token_expiration } = pendingUser;
+				if (activation_token === activationToken) {
+					await pendingUsersAPI.deletePendingUserById(id_user);
+					await userAPI.createUser(id_user, email, password);
 
-			if (token_expiration >= new Date()) {
-				await pendingUsersAPI.deletePendingUser(activationLink);
-				await userAPI.createUser(id_user, email, password);
-			} else {
-				const youCanGetNewLink =
-					await pendingUsersAPI.updateResendExpiration(email);
-				if (youCanGetNewLink) {
-					throw ClientError.ActivationLinkExpiredError();
+					const uaJSON = getUA(userAgent);
+					const accessToken = tokenModel.generateAccessToken(id_user, email);
+					const {
+						refreshToken,
+						caption,
+						userAgent: userAgentDB,
+					} = tokenModel.generateRefreshToken(id_user, email, uaJSON);
+					await tokenAPI.createToken(
+						id_user,
+						refreshToken,
+						caption,
+						userAgentDB,
+					);
+
+					return { accessToken, refreshToken };
 				} else {
-					throw ClientError.TooManyResendRequests();
+					throw ClientError.ActivationLinkExpiredError();
 				}
+			} else {
+				throw ClientError.UserAlreadyExisted();
 			}
 		} else {
 			throw ClientError.BadRequest(
-				'Сбой активации: аккаунт уже активирован или ссылка активации недействительна',
+				'Сбой активации: ссылка активации устарела, или она недействительна',
 			);
 		}
 	}
 
-	async resendActivationLink(activationLink: string) {
-		// * здесь использование as имеет смысл, так как здесь обрабатывается случай, когда ссылка устарела
-		// * обновляем токен активации и отправляем письмо
-		const { email } = (await pendingUsersAPI.getPendingUserByToken(
-			activationLink,
-		)) as PendingUser;
-
-		activationLink = await pendingUsersAPI.updatePendingUserToken(email);
+	async resendActivationLink(email: string) {
+		const activationToken = tokenModel.generateActivationToken(email);
+		await pendingUsersAPI.updatePendingUserToken(email, activationToken);
 		await mailModel.sendActivationMail(
 			email,
-			`${process.env.SERVER_URL}/api/activate/${activationLink}`,
+			`${process.env.SERVER_URL}/api/activate/${activationToken}`,
 		);
 	}
 
-	// ! нужно либо на клиенсткой стороне, либо здесь предусмотреть момент, что уже
-	// ! залогиненный клиент может зачем-то перейти на страницу логина и еще раз
-	// ! попробовать это сделать. Либо надо запрещать этот роут для залогиненных пользователей на клиенте,
-	// ! либо здесь оформлять эту логику
 	async login(email: string, password: string, userAgent: string | undefined) {
 		const user = await userAPI.getUserByEmail(email);
 		if (user) {
@@ -109,22 +122,29 @@ class UserModel {
 	}
 
 	async logout(refreshToken: string) {
-		await tokenModel.removeRefreshToken(refreshToken);
+		const { sub } = tokenModel.decodeRefreshToken(refreshToken);
+		await tokenModel.removeRefreshToken(sub);
 	}
 
 	async updateRefresh(refresh: any, userAgent: string | undefined) {
-		const tokenData = tokenModel.verifyRefreshToken(refresh);
-
-		if (tokenData) {
-			const { sub, email, jti } = tokenData;
-			const id_user = Number(sub as string);
-			const uaJSON = getUA(userAgent);
+		if (refresh) {
+			const { sub, email, jti, iat } = tokenModel.decodeRefreshToken(refresh);
+			const id_user = Number(`${sub}`);
 
 			const tokens = await tokenAPI.getUserByUserId(id_user);
 			const tokenSession = tokens.find((token) => token.token === refresh);
-			const isEqualUserAgent = tokenSession?.userAgentDB === uaJSON;
+
+			const uaJSON = getUA(userAgent);
+
 			const isEqualCaption = tokenSession?.caption === jti;
-			if (isEqualUserAgent && isEqualCaption) {
+			const isEqualUpdatedTime = tokenSession?.updated_at.getTime() === iat;
+			const isEqualUserAgent = tokenSession?.user_agent === uaJSON;
+			if (
+				tokenSession &&
+				isEqualCaption &&
+				isEqualUpdatedTime &&
+				isEqualUserAgent
+			) {
 				const accessToken = tokenModel.generateAccessToken(id_user, email);
 				const { refreshToken } = tokenModel.generateRefreshToken(
 					id_user,
@@ -136,6 +156,8 @@ class UserModel {
 
 				return { accessToken, refreshToken };
 			} else {
+				// если что-то подозрительное происходит, то мы будем просить пользователя
+				// пройти sign in
 				throw ClientError.ForbiddenError();
 			}
 		} else {

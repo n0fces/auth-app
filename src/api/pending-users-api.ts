@@ -2,73 +2,48 @@ import { PendingUser } from 'types';
 import { query } from './query';
 
 class PendingUsersAPI {
-	async createPendingUser(email: string, hashedPassword: string) {
-		const result = await query<Pick<PendingUser, 'activation_token'>>(
-			'INSERT INTO pending_users (email, password) VALUES ($1, $2) RETURNING activation_token',
-			[email, hashedPassword],
+	async createPendingUser(
+		email: string,
+		activationToken: string,
+		hashedPassword: string,
+	) {
+		await query(
+			'INSERT INTO pending_users (email, activation_token, password) VALUES ($1, $2, $3)',
+			[email, activationToken, hashedPassword],
 		);
-
-		return result.rows[0].activation_token;
 	}
 
-	async getPendingUserByEmail(email: string) {
-		const result = await query<Pick<PendingUser, 'email'>>(
-			'SELECT email FROM pending_users WHERE email = $1',
-			[email],
-		);
-
-		return result.rows.length === 0 ? null : result.rows[0].email;
-	}
-
-	async updatePendingUserToken(email: string, hashedPassword?: string) {
+	async updatePendingUserToken(
+		email: string,
+		activationToken: string,
+		hashedPassword?: string,
+	) {
 		const queryText = `
 			UPDATE pending_users 
 			SET 
-				${hashedPassword ? 'password = $2,' : ''}
-				activation_token = uuid_generate_v4(),
-				token_expiration = NOW() + INTERVAL '10 minutes'
-			WHERE email = $1 
-			RETURNING activation_token`;
+				${hashedPassword ? 'password = $3,' : ''}
+				activation_token = $2,
+				resend_expiration = NOW() + INTERVAL '1 day'
+			WHERE email = $1`;
 
-		const values = hashedPassword ? [email, hashedPassword] : [email];
+		const values = hashedPassword
+			? [email, activationToken, hashedPassword]
+			: [email, activationToken];
 
-		const result = await query<Pick<PendingUser, 'activation_token'>>(
-			queryText,
-			values,
-		);
-
-		return result.rows[0].activation_token;
+		await query(queryText, values);
 	}
 
-	async getPendingUserByToken(activation_token: string) {
+	async getPendingUserByEmail(email: string) {
 		const result = await query<PendingUser>(
-			'SELECT * FROM pending_users WHERE activation_token = $1',
-			[activation_token],
+			'SELECT * FROM pending_users WHERE email = $1',
+			[email],
 		);
 
 		return result.rows.length === 0 ? null : result.rows[0];
 	}
 
-	async updateResendExpiration(email: string) {
-		const result = await query<Pick<PendingUser, 'email'>>(
-			`
-			UPDATE pending_users
-			SET 
-				resend_expiration = NOW() + INTERVAL '1 day',
-				resend_limit = resend_limit - 1
-			WHERE
-				email = $1 AND resend_limit > 0
-			RETURNING email`,
-			[email],
-		);
-
-		return result.rows.length > 0;
-	}
-
-	async deletePendingUser(activation_token: string) {
-		await query('DELETE FROM pending_users WHERE activation_token = $1', [
-			activation_token,
-		]);
+	async deletePendingUserById(id_user: number) {
+		await query('DELETE FROM pending_users WHERE id_user = $1', [id_user]);
 	}
 }
 

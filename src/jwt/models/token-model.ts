@@ -1,7 +1,7 @@
 import { tokenAPI } from 'api';
 import 'dotenv/config';
 import jwt from 'jsonwebtoken';
-import { AccessPayload, RefreshPayload } from 'types';
+import { AccessPayload, ActivationPayload, RefreshPayload } from 'types';
 import { v4 } from 'uuid';
 
 class TokenModel {
@@ -18,6 +18,7 @@ class TokenModel {
 			aud: process.env.CLIENT_URL,
 			iat: Date.now(),
 			jti: caption,
+			email_verified: true,
 			email,
 			userAgent,
 		};
@@ -29,6 +30,18 @@ class TokenModel {
 			iss: process.env.SERVER_URL,
 			sub: String(id_user),
 			aud: process.env.CLIENT_URL,
+			iat: Date.now(),
+			jti: v4(),
+			email_verified: true,
+			email,
+		};
+
+		return payload;
+	}
+
+	private generateActivationPayload(email: string) {
+		const payload: ActivationPayload = {
+			iss: process.env.SERVER_URL,
 			iat: Date.now(),
 			jti: v4(),
 			email,
@@ -62,6 +75,17 @@ class TokenModel {
 		return { refreshToken, caption, userAgent };
 	}
 
+	generateActivationToken(email: string) {
+		const payload = this.generateActivationPayload(email);
+		const activationToken = jwt.sign(
+			payload,
+			process.env.JWT_ACTIVATION_SECRET as string,
+			{ expiresIn: process.env.ACTIVATION_TOKEN_LIFE },
+		);
+
+		return activationToken;
+	}
+
 	verifyRefreshToken(refresh: any) {
 		try {
 			const userPayload = jwt.verify(
@@ -86,8 +110,25 @@ class TokenModel {
 		}
 	}
 
-	async removeRefreshToken(refreshToken: string) {
-		await tokenAPI.removeTokenByToken(refreshToken);
+	verifyActivationToken(activation: string) {
+		try {
+			const activationPayload = jwt.verify(
+				activation,
+				process.env.JWT_ACTIVATION_SECRET as string,
+			);
+			return activationPayload as ActivationPayload;
+		} catch (error) {
+			return null;
+		}
+	}
+
+	decodeRefreshToken(token: string) {
+		return jwt.decode(token) as RefreshPayload;
+	}
+
+	async removeRefreshToken(sub?: string) {
+		const user_id = String(sub);
+		await tokenAPI.removeTokenByUserId(user_id);
 	}
 }
 
