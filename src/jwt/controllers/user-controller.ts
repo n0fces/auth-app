@@ -28,7 +28,7 @@ class UserController {
 
 			setCookieTokens({ res, accessToken, refreshToken });
 
-			return res.redirect(`${process.env.CLIENT_URL}`);
+			res.redirect(`${process.env.CLIENT_URL}`);
 		} catch (error) {
 			next(error);
 		}
@@ -60,7 +60,7 @@ class UserController {
 
 			setCookieTokens({ res, accessToken, refreshToken });
 
-			return res.redirect(`${process.env.CLIENT_URL}`);
+			return res.send({ email });
 		} catch (error) {
 			next(error);
 		}
@@ -68,12 +68,14 @@ class UserController {
 
 	async logout(req: Request, res: Response, next: NextFunction) {
 		try {
-			const { refreshToken } = req.signedCookies;
+			// const { refreshToken } = req.signedCookies;
+			const { refreshToken } = req.cookies;
 			await userModel.logout(refreshToken);
 			// * Я ведь храню в куках не только refreshToken, но и accessToken
 			res.clearCookie('refreshToken');
 			res.clearCookie('accessToken');
-			return res.redirect(process.env.CLIENT_URL as string);
+
+			res.sendStatus(200);
 		} catch (error) {
 			next(error);
 		}
@@ -82,7 +84,8 @@ class UserController {
 	// * для обновления refresh токена
 	async refresh(req: Request, res: Response, next: NextFunction) {
 		try {
-			const { refreshToken: refresh } = req.signedCookies;
+			// const { refreshToken: refresh } = req.signedCookies;
+			const { refreshToken: refresh } = req.cookies;
 			const userAgent = req.headers['user-agent'];
 			const { accessToken, refreshToken } = await userModel.updateRefresh(
 				refresh,
@@ -100,7 +103,8 @@ class UserController {
 	// * для обновления access токена
 	async access(req: Request, res: Response, next: NextFunction) {
 		try {
-			const { refreshToken: refresh } = req.signedCookies;
+			// const { refreshToken: refresh } = req.signedCookies;
+			const { refreshToken: refresh } = req.cookies;
 			const accessToken = await userModel.updateAccess(refresh);
 
 			setCookieTokens({ res, accessToken });
@@ -109,6 +113,23 @@ class UserController {
 		} catch (error) {
 			next(error);
 		}
+	}
+
+	async getUser(req: Request, res: Response, next: NextFunction) {
+		try {
+			const user_id = req.user_id;
+			if (user_id) {
+				const user = await userModel.getUser(user_id);
+
+				res.send(user);
+			}
+		} catch (error) {
+			next(error);
+		}
+	}
+
+	checkAccess(req: Request, res: Response, next: NextFunction) {
+		res.sendStatus(200);
 	}
 }
 

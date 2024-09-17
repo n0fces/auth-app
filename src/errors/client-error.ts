@@ -1,35 +1,30 @@
-// ! ВСЕ ЭТИ ОШИБКИ НЕОБХОДИМО ПРАВИЛЬНО ОБРАБАТЫВАТЬ НА КЛИЕНТЕ!
 export class ClientError extends Error {
 	status: number;
 	errors: any[];
 
 	// ! надо будет подумать над типов для errors
-	constructor(status: number, message: string, errors: any[] = []) {
+	constructor(
+		status: number,
+		message: string,
+		name: string,
+		errors: unknown[] = [],
+	) {
 		// вызываем родительский конструктор у Error
 		super(message);
 		this.status = status;
+		this.name = name;
 		this.errors = errors;
 	}
 
-	// ? надо будет потом посмотреть код ошибок и их описание
+	static BadRequest(message: string, errors: any[] = []) {
+		return new ClientError(400, message, 'BadRequest', errors);
+	}
+
 	static UnauthorizedError() {
 		return new ClientError(
 			401,
 			'Вы не авторизованы для доступа к этому ресурсу',
-		);
-	}
-
-	static UserAlreadyExisted() {
-		return new ClientError(
-			409,
-			'Вы уже зарегистрированы. Пожалуйста, войдите в свою учетную запись',
-		);
-	}
-
-	static ActivationLinkExpiredError() {
-		return new ClientError(
-			410,
-			'Ссылка для активации устарела. Пожалуйста, активируйте аккаунт по последней ссылке активации',
+			'UnauthorizedError',
 		);
 	}
 
@@ -37,13 +32,31 @@ export class ClientError extends Error {
 		return new ClientError(
 			401,
 			'Неправильный пароль. Пожалуйста, попробуйте еще раз',
+			'WrongPassword',
 		);
 	}
 
-	static UserNotFound() {
+	static AccessTokenExpired() {
+		return new ClientError(401, 'Токен доступа истек', 'AccessTokenExpired');
+	}
+
+	static AccessTokenInvalid() {
 		return new ClientError(
-			404,
-			'Учетная запись не найдена. Пожалуйста, проверьте введенные данные или зарегистрируйтесь',
+			401,
+			'Не валидный токен доступа',
+			'AccessTokenInvalid',
+		);
+	}
+
+	static RefreshTokenExpired() {
+		return new ClientError(401, 'Refresh токен истек', 'RefreshTokenExpired');
+	}
+
+	static RefreshTokenInvalid() {
+		return new ClientError(
+			401,
+			'Не валидный refresh токен',
+			'RefreshTokenInvalid',
 		);
 	}
 
@@ -51,10 +64,31 @@ export class ClientError extends Error {
 		return new ClientError(
 			403,
 			'Неправильная сессия или скомпроментированный рефреш токен',
+			'ForbiddenError',
 		);
 	}
 
-	static BadRequest(message: string, errors: any[] = []) {
-		return new ClientError(400, message, errors);
+	static UserNotFound() {
+		return new ClientError(
+			404,
+			'Учетная запись не найдена. Пожалуйста, проверьте введенные данные или зарегистрируйтесь',
+			'UserNotFound',
+		);
+	}
+
+	static UserAlreadyExisted() {
+		return new ClientError(
+			409,
+			'Вы уже зарегистрированы. Пожалуйста, войдите в свою учетную запись',
+			'UserAlreadyExisted',
+		);
+	}
+
+	static ActivationLinkExpired() {
+		return new ClientError(
+			410,
+			'Ссылка для активации устарела. Пожалуйста, активируйте аккаунт по последней ссылке активации',
+			'ActivationLinkExpired',
+		);
 	}
 }

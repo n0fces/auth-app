@@ -8,7 +8,7 @@
 		"dev": "concurrently \"npm run compile\" \"npm run start\"",
 		"build": "cross-env MODE=production tsx ./config/build/esbuild-prod.mts",
 		"eslint": "eslint",
-		"prettier": "prettier"
+		"prettier": "prettier --write ."
 	},
 	"keywords": [],
 	"author": "",
@@ -50,7 +50,7 @@
 		"cookie-parser": "^1.4.6",
 		"cors": "^2.8.5",
 		"dotenv": "^16.4.5",
-		"express": "^4.19.2",
+		"express": "^4.20.0",
 		"express-validator": "^7.2.0",
 		"jsonwebtoken": "^9.0.2",
 		"nodemailer": "^6.9.14",

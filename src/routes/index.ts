@@ -26,6 +26,8 @@ router.get('/resend-activation-link', userController.resendActivationLink);
 router.get('/access', userController.access);
 // * отдельный роут для получения refresh токена
 router.get('/refresh', userController.refresh);
-router.get('*', authMiddleware);
+// * роут, который будет отвечать за проверку того, есть ли у пользователя доступ к контенту
+router.get('/check-access', authMiddleware, userController.checkAccess);
+router.get('/get-user', authMiddleware, userController.getUser);
 
 export { router };

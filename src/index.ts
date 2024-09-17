@@ -12,10 +12,16 @@ const PORT = process.env.PORT ?? '5000';
 
 app.use(express.json());
 // * не забудь, что при предоставлении секрета необходимо использовать signedCookies
-app.use(cookieParser(process.env.COOKIE_PARSER_SECRET));
-app.use(cors());
-// /api - маршрут, по которому будет отрабатывать роутер
-app.use('/api', router);
+// app.use(cookieParser(process.env.COOKIE_PARSER_SECRET));
+app.use(cookieParser());
+app.use(
+	cors({
+		credentials: true,
+		origin: process.env.CLIENT_URL,
+	}),
+);
+// /auth - маршрут, по которому будет отрабатывать роутер
+app.use('/auth', router);
 app.use(errorMiddleware);
 
 const start = async () => {

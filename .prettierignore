@@ -5,13 +5,16 @@ build/
 node_modules/
 
 # Ignore specific configuration files
-*.config.js
+*.config.*
+tsconfig.json
+.prettierrc
 
 # Ignore environment variables files
 .env
 .env.*
 
 # Ignore lock files
+package.json
 package-lock.json
 
 # Ignore logs

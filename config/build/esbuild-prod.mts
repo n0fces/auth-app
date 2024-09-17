@@ -3,10 +3,10 @@ import config from './esbuild-config.mjs';
 
 const result = await esbuild.build({
 	...config,
-	// define: {
-	// 	'process.env.HOST': '"http://localhost"',
-	// 	'process.env.PORT': '"5000"',
-	// },
+	define: {
+		'process.env.SERVER_URL': '"http://localhost:5000"',
+		'process.env.CLIENT_URL': '"http://localhost:5173"',
+	},
 });
 
 if (result.errors.length) {

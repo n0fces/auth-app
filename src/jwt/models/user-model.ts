@@ -41,48 +41,39 @@ class UserModel {
 		// отправляем письмо с ссылкой активации на указанную почту
 		await mailModel.sendActivationMail(
 			email,
-			`${process.env.SERVER_URL}/api/activate/${activationToken}`,
+			`${process.env.SERVER_URL}/auth/activate/${activationToken}`,
 		);
 	}
 
 	// * этот метод нужно очень качественно задокументировать
 	async activate(activationToken: string, userAgent: string | undefined) {
 		const payload = tokenModel.verifyActivationToken(activationToken);
-		if (payload) {
-			const { email } = payload;
-			const pendingUser = await pendingUsersAPI.getPendingUserByEmail(email);
-			if (pendingUser) {
-				const { id_user, email, password, activation_token } = pendingUser;
+		const { email } = payload;
+		const pendingUser = await pendingUsersAPI.getPendingUserByEmail(email);
+		if (pendingUser) {
+			const { id_user, email, password, activation_token } = pendingUser;
 
-				if (activation_token === activationToken) {
-					await pendingUsersAPI.deletePendingUserById(id_user);
-					await userAPI.createUser(id_user, email, password);
+			if (activation_token === activationToken) {
+				await pendingUsersAPI.deletePendingUserById(id_user);
+				await userAPI.createUser(id_user, email, password);
 
-					const uaJSON = getUA(userAgent);
-					const accessToken = tokenModel.generateAccessToken(id_user, email);
-					const {
-						refreshToken,
-						caption,
-						userAgent: userAgentDB,
-					} = tokenModel.generateRefreshToken(id_user, email, uaJSON);
-					await tokenAPI.createToken(
-						id_user,
-						refreshToken,
-						caption,
-						userAgentDB,
-					);
+				const uaJSON = getUA(userAgent);
+				const accessToken = tokenModel.generateAccessToken(id_user, email);
+				const {
+					refreshToken,
+					caption,
+					userAgent: userAgentDB,
+				} = tokenModel.generateRefreshToken(id_user, email, uaJSON);
+				await tokenAPI.createToken(id_user, refreshToken, caption, userAgentDB);
 
-					return { accessToken, refreshToken };
-				} else {
-					throw ClientError.ActivationLinkExpiredError();
-				}
+				return { accessToken, refreshToken };
 			} else {
-				throw ClientError.UserAlreadyExisted();
+				throw ClientError.BadRequest(
+					'Сбой активации: ссылка активации невалидна',
+				);
 			}
 		} else {
-			throw ClientError.BadRequest(
-				'Сбой активации: ссылка активации устарела, или она недействительна',
-			);
+			throw ClientError.UserAlreadyExisted();
 		}
 	}
 
@@ -91,7 +82,7 @@ class UserModel {
 		await pendingUsersAPI.updatePendingUserToken(email, activationToken);
 		await mailModel.sendActivationMail(
 			email,
-			`${process.env.SERVER_URL}/api/activate/${activationToken}`,
+			`${process.env.SERVER_URL}/auth/activate/${activationToken}`,
 		);
 	}
 
@@ -155,12 +146,14 @@ class UserModel {
 				await tokenAPI.updateTokenByUserId(id_user, refreshToken);
 
 				return { accessToken, refreshToken };
+				// ! в обоих этих else на самом деле не буду прокидывать ошибку, а отдельно буду обрабатывать это
 			} else {
-				// если что-то подозрительное происходит, то мы будем просить пользователя
-				// пройти sign in
+				// ! здесь надо будет добавить логику, связанную с блэк-листом
+				// ! здесь надо добавить логику с логированием
 				throw ClientError.ForbiddenError();
 			}
 		} else {
+			// ! здесь надо добавить логику с логированиемuser
 			throw ClientError.UnauthorizedError();
 		}
 	}
@@ -168,14 +161,14 @@ class UserModel {
 	async updateAccess(refreshToken: any) {
 		const tokenData = tokenModel.verifyRefreshToken(refreshToken);
 
-		if (tokenData) {
-			const { sub, email } = tokenData;
-			const id_user = Number(sub as string);
-			const accessToken = tokenModel.generateAccessToken(id_user, email);
-			return accessToken;
-		} else {
-			throw ClientError.UnauthorizedError();
-		}
+		const { sub, email } = tokenData;
+		const id_user = Number(sub as string);
+		const accessToken = tokenModel.generateAccessToken(id_user, email);
+		return accessToken;
+	}
+
+	async getUser(userId: string) {
+		return await userAPI.getUserById(userId);
 	}
 }
 

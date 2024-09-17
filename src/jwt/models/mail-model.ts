@@ -25,7 +25,7 @@ class MailModel {
 			{
 				from: process.env.SMTP_USER,
 				to,
-				subject: `Активация аккаунта на ${process.env.SERVER_URL}`,
+				subject: `Активация аккаунта на ${process.env.CLIENT_URL}`,
 				text: '',
 				html: `<div><h1>Для активации перейдите по ссылке</h1>
 					<a href="${link}">${link}</a></div>`,

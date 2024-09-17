@@ -9,7 +9,7 @@ class TokenAPI {
 		userAgentDB: string,
 	) {
 		await query(
-			'INSERT INTO tokens (id_user, token, caption, userAgentDB) VALUES ($1, $2, $3, $4)',
+			'INSERT INTO tokens (id_user, token, caption, user_agent) VALUES ($1, $2, $3, $4)',
 			[id_user, token, caption, userAgentDB],
 		);
 	}

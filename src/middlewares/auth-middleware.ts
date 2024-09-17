@@ -9,22 +9,22 @@ export function authMiddleware(
 	next: NextFunction,
 ) {
 	try {
-		// к запросу прицепить токен мы можем при помощи заголовков
-		// токен обычно указывает в заголовке authorization
-		const authorizationHeader = req.headers.authorization;
-		if (!authorizationHeader) {
+		const cookies = req.cookies;
+		const { accessToken, refreshToken } = cookies;
+		// если рефреш токена совсем нет, то это означает, что либо пользователь
+		// первый раз зашел в приложение, либо он давно не заходил, поэтому
+		// у него истек и рефреш токен
+		if (!refreshToken) {
 			return next(ClientError.UnauthorizedError());
 		}
-		// первым словом будет Bearer
-		const accessToken = authorizationHeader.split(' ')[1];
+
 		if (!accessToken) {
-			return next(ClientError.UnauthorizedError());
+			return next(ClientError.AccessTokenExpired());
 		}
-		// валидируем аксесс токен
+
 		const userData = tokenModel.verifyAccessToken(accessToken);
-		if (!userData) {
-			return next(ClientError.UnauthorizedError());
-		}
+
+		req.user_id = userData.sub;
 
 		next();
 	} catch (error) {

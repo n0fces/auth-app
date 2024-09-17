@@ -20,6 +20,19 @@ class UserAPI {
 
 		return result.rows[0];
 	}
+
+	async getUserById(id_user: string) {
+		const result = await query<Pick<User, 'email'>>(
+			'SELECT email FROM users WHERE id_user = $1',
+			[id_user],
+		);
+
+		if (result.rows.length === 0) {
+			return null;
+		}
+
+		return result.rows[0];
+	}
 }
 
 export const userAPI = new UserAPI();

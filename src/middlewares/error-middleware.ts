@@ -15,7 +15,7 @@ export function errorMiddleware(
 	if (err instanceof ClientError || err instanceof ServerError) {
 		return res
 			.status(err.status)
-			.json({ message: err.message, errors: err.errors });
+			.json({ message: err.message, errors: err.errors, name: err.name });
 	}
 	// если не предусмотрели ошибку, то это наша проблема (проблема сервера)
 	return res.status(500).json({ message: 'Непредвиденная ошибка' });

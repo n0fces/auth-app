@@ -5,7 +5,7 @@ LIMIT
 	= -1 IS_TEMPLATE = False;
 
 CREATE TABLE users (
-	id_user PRIMARY KEY,
+	id_user INTEGER PRIMARY KEY,
 	password VARCHAR(255) NOT NULL,
 	email VARCHAR(255) UNIQUE NOT NULL
 );
