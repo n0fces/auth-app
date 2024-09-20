@@ -40,6 +40,27 @@ class MailModel {
 			},
 		);
 	}
+
+	async sendResetPasswordMail(to: string, link: string) {
+		this.transporter.sendMail(
+			{
+				from: process.env.SMTP_USER,
+				to,
+				subject: `Сброс пароля на ${process.env.CLIENT_URL}`,
+				text: '',
+				html: `<div><h1>Для сброса пароля перейдите по ссылке</h1>
+					<a href="${link}">${link}</a></div>`,
+			},
+			(error, info) => {
+				if (error) {
+					// здесь, возможно, надо будет сделать повторную попытку отправки
+					console.error(`Ошибка в отправки email: ${error}`);
+				} else {
+					console.log(`Email sent: ${info.response}`);
+				}
+			},
+		);
+	}
 }
 
 export const mailModel = new MailModel();

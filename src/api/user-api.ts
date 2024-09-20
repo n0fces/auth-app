@@ -33,6 +33,13 @@ class UserAPI {
 
 		return result.rows[0];
 	}
+
+	async updateUserPassword(email: string, newPassword: string) {
+		await query('UPDATE users SET password = $2 WHERE email = $1', [
+			email,
+			newPassword,
+		]);
+	}
 }
 
 export const userAPI = new UserAPI();

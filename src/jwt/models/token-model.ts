@@ -3,6 +3,7 @@ import 'dotenv/config';
 import { ClientError } from 'errors/client-error';
 import jwt, { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
 import { AccessPayload, ActivationPayload, RefreshPayload } from 'types';
+import { ResetPayload } from 'types/payload_types';
 import { v4 } from 'uuid';
 
 class TokenModel {
@@ -51,6 +52,10 @@ class TokenModel {
 		return payload;
 	}
 
+	private generateResetPayload(id_user: number, email: string) {
+		return this.generateAccessPayload(id_user, email);
+	}
+
 	generateAccessToken(id_user: number, email: string) {
 		const payload = this.generateAccessPayload(id_user, email);
 		const accessToken = jwt.sign(
@@ -85,6 +90,17 @@ class TokenModel {
 		);
 
 		return activationToken;
+	}
+
+	generateResetPasswordToken(id_user: number, email: string) {
+		const payload = this.generateResetPayload(id_user, email);
+		const resetToken = jwt.sign(
+			payload,
+			process.env.JWT_RESET_PASSWORD_SECRET as string,
+			{ expiresIn: '10m' },
+		);
+
+		return resetToken;
 	}
 
 	// ! в методах проверки токенов на валидность надо проработать кейсы
@@ -149,8 +165,34 @@ class TokenModel {
 		}
 	}
 
+	verifyResetToken(token: string) {
+		try {
+			const resetPayload = jwt.verify(
+				token,
+				process.env.JWT_RESET_PASSWORD_SECRET as string,
+			);
+			return resetPayload as ResetPayload;
+		} catch (error) {
+			if (error instanceof TokenExpiredError) {
+				throw ClientError.ActivationLinkExpired();
+			} else if (error instanceof JsonWebTokenError) {
+				throw ClientError.BadRequest(
+					'Сбой активации: ссылка активации невалидна',
+				);
+			} else {
+				throw ClientError.BadRequest(
+					'Сбой активации: ссылка активации устарела, или она недействительна',
+				);
+			}
+		}
+	}
+
 	decodeRefreshToken(token: string) {
 		return jwt.decode(token) as RefreshPayload;
+	}
+
+	decodeResetToken(token: string) {
+		return jwt.decode(token) as ResetPayload;
 	}
 
 	async removeRefreshToken(sub?: string) {

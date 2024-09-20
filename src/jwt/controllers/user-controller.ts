@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { NextFunction, Request, Response } from 'express';
+import { tokenModel } from 'jwt/models/token-model';
 import { userModel } from 'jwt/models/user-model';
 import { setCookieTokens } from 'utils/setCookie';
 import { validationResultChecker } from 'utils/validationResultChecker';
@@ -74,6 +75,61 @@ class UserController {
 			// * Я ведь храню в куках не только refreshToken, но и accessToken
 			res.clearCookie('refreshToken');
 			res.clearCookie('accessToken');
+
+			res.sendStatus(200);
+		} catch (error) {
+			next(error);
+		}
+	}
+
+	async forgotPassword(req: Request, res: Response, next: NextFunction) {
+		try {
+			validationResultChecker(req, next);
+			const { email } = req.body;
+			await userModel.forgotPassword(email);
+
+			res.sendStatus(200);
+		} catch (error) {
+			next(error);
+		}
+	}
+
+	async resendForgotPasswords(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { token } = req.body;
+			const { email } = tokenModel.decodeResetToken(token);
+			// * да там лишний поиск по бд, но хотя бы сейчас код переиспользуется. Потом может это исправлю
+			await userModel.forgotPassword(email);
+
+			res.sendStatus(200);
+		} catch (error) {
+			next(error);
+		}
+	}
+
+	async resetPasswordAccess(req: Request, res: Response, next: NextFunction) {
+		const resetToken = req.params.token;
+		try {
+			tokenModel.verifyResetToken(resetToken);
+
+			res.redirect(`${process.env.CLIENT_URL}/reset-password/${resetToken}`);
+		} catch (error) {
+			next(error);
+		}
+	}
+
+	async resetPassword(req: Request, res: Response, next: NextFunction) {
+		try {
+			validationResultChecker(req, next);
+			const { password, logoutAllDevices, token: resetToken } = req.body;
+			const { email } = tokenModel.verifyResetToken(resetToken);
+			await userModel.resetPassword(email, password);
+
+			if (logoutAllDevices) {
+				userModel.logoutAllDevices(email).catch((err) => {
+					throw err;
+				});
+			}
 
 			res.sendStatus(200);
 		} catch (error) {

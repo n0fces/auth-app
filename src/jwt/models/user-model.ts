@@ -117,6 +117,35 @@ class UserModel {
 		await tokenModel.removeRefreshToken(sub);
 	}
 
+	async forgotPassword(email: string) {
+		const user = await userAPI.getUserByEmail(email);
+		if (user) {
+			const { id_user } = user;
+			const resetToken = tokenModel.generateResetPasswordToken(id_user, email);
+			await mailModel.sendResetPasswordMail(
+				email,
+				`${process.env.SERVER_URL}/auth/reset-password-access/${resetToken}`,
+			);
+		} else {
+			throw ClientError.UserNotFound();
+		}
+	}
+
+	async resetPassword(email: string, password: string) {
+		const hashedPassword = await bcrypt.hash(password, 10);
+		await userAPI.updateUserPassword(email, hashedPassword);
+	}
+
+	async logoutAllDevices(email: string) {
+		const user = await userAPI.getUserByEmail(email);
+		if (user) {
+			const { id_user } = user;
+			await tokenAPI.deleteAllTokensByUserId(id_user);
+		} else {
+			throw ClientError.UserNotFound();
+		}
+	}
+
 	async updateRefresh(refresh: any, userAgent: string | undefined) {
 		if (refresh) {
 			const { sub, email, jti, iat } = tokenModel.decodeRefreshToken(refresh);

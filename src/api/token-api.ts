@@ -36,6 +36,10 @@ class TokenAPI {
 			[newToken, id_user],
 		);
 	}
+
+	async deleteAllTokensByUserId(id_user: number) {
+		await query('DELETE FROM tokens WHERE id_user = $1', [id_user]);
+	}
 }
 
 export const tokenAPI = new TokenAPI();
