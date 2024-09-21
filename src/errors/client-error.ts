@@ -91,4 +91,12 @@ export class ClientError extends Error {
 			'ActivationLinkExpired',
 		);
 	}
+
+	static ResetLinkExpired() {
+		return new ClientError(
+			410,
+			'Ссылка для сброса пароля устарела. Попробуйте еще раз обновить пароль',
+			'ResetLinkExpired',
+		);
+	}
 }

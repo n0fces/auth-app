@@ -27,7 +27,7 @@ router.post(
 	body('email').isEmail(),
 	userController.forgotPassword,
 );
-router.post('/resend-forgot-password', userController.forgotPassword);
+router.post('/resend-forgot-password', userController.resendForgotPasswords);
 router.get('/reset-password-access/:token', userController.resetPasswordAccess);
 router.post(
 	'/reset-password',

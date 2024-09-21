@@ -97,7 +97,7 @@ class TokenModel {
 		const resetToken = jwt.sign(
 			payload,
 			process.env.JWT_RESET_PASSWORD_SECRET as string,
-			{ expiresIn: '10m' },
+			{ expiresIn: 600 },
 		);
 
 		return resetToken;
@@ -174,7 +174,7 @@ class TokenModel {
 			return resetPayload as ResetPayload;
 		} catch (error) {
 			if (error instanceof TokenExpiredError) {
-				throw ClientError.ActivationLinkExpired();
+				throw ClientError.ResetLinkExpired();
 			} else if (error instanceof JsonWebTokenError) {
 				throw ClientError.BadRequest(
 					'Сбой активации: ссылка активации невалидна',
