@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-confusing-void-expression */
 import { ClientError } from 'errors/client-error';
 import { NextFunction, Request, Response } from 'express';
 import { tokenModel } from 'jwt/models/token-model';
@@ -16,13 +17,11 @@ export function authMiddleware(
 		// первый раз зашел в приложение, либо он давно не заходил, поэтому
 		// у него истек и рефреш токен
 		if (!refreshToken) {
-			next(ClientError.UnauthorizedError());
-			return;
+			return next(ClientError.UnauthorizedError());
 		}
 
 		if (!accessToken || !isString(accessToken)) {
-			next(ClientError.AccessTokenExpired());
-			return;
+			return next(ClientError.AccessTokenExpired());
 		}
 
 		const userData = tokenModel.verifyAccessToken(accessToken);
@@ -31,7 +30,6 @@ export function authMiddleware(
 
 		next();
 	} catch {
-		next(ClientError.UnauthorizedError());
-		return;
+		return next(ClientError.UnauthorizedError());
 	}
 }

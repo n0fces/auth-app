@@ -25,17 +25,13 @@ app.use('/auth', router);
 app.use(errorMiddleware);
 
 const start = () => {
-	try {
-		pool.on('error', (err) => {
-			console.error('Something bad has happened!', err.stack);
-		});
+	pool.on('error', (err) => {
+		console.error('Something bad has happened!', err.stack);
+	});
 
-		app.listen(PORT, () => {
-			console.log(`Server started on PORT = ${PORT}`);
-		});
-	} catch (error) {
-		console.log(error);
-	}
+	app.listen(PORT, () => {
+		console.log(`Server started on PORT = ${PORT}`);
+	});
 };
 
 start();

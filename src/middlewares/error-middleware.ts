@@ -4,7 +4,6 @@ import { Request, Response } from 'express';
 
 export function errorMiddleware(err: Error, req: Request, res: Response) {
 	// будет логировать ошибку
-	console.log(err);
 	// * если предусмотренная нами клиентская ошибка или серверная ошибка, то отправляем её. На фронтенде
 	// * мы знаем, как ее обрабатывать
 	if (err instanceof ClientError || err instanceof ServerError) {
