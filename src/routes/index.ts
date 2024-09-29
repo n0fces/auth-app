@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/unbound-method -- в коде контроллеров и моделей нигде не используются контекст извне*/
+/* eslint-disable @typescript-eslint/no-misused-promises -- в коде приложения есть app.use(errorMiddleware), который перехватывает все ошибки */
 import { Router } from 'express';
 import { userController } from 'jwt/controllers/user-controller';
 import { body } from 'express-validator';

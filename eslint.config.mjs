@@ -42,15 +42,6 @@ export default tseslint.config(
 		...tseslint.configs.disableTypeChecked,
 	},
 	{
-		files: ['src/routes/index.ts'],
-		rules: {
-			// в коде приложения есть app.use(errorMiddleware), который перехватывает все ошибки
-			'@typescript-eslint/no-misused-promises': 'off',
-			// в коде контроллеров и моделей нигде не используются контекст извне
-			'@typescript-eslint/unbound-method': 'off',
-		},
-	},
-	{
 		name: 'overrides',
 		files: ['src/api/query.ts', 'types.d.ts'],
 		rules: {

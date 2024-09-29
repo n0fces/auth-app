@@ -1,8 +1,14 @@
 import { ClientError } from 'errors/client-error';
 import { ServerError } from 'errors/server-error';
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 
-export function errorMiddleware(err: Error, req: Request, res: Response) {
+export function errorMiddleware(
+	err: Error,
+	req: Request,
+	res: Response,
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	next: NextFunction,
+) {
 	// будет логировать ошибку
 	// * если предусмотренная нами клиентская ошибка или серверная ошибка, то отправляем её. На фронтенде
 	// * мы знаем, как ее обрабатывать
