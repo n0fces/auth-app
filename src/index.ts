@@ -8,7 +8,7 @@ import { router } from './routes';
 
 const app = express();
 
-const PORT = process.env.PORT ?? '5000';
+const PORT = process.env.PORT;
 
 app.use(express.json());
 // * не забудь, что при предоставлении секрета необходимо использовать signedCookies
@@ -24,7 +24,7 @@ app.use(
 app.use('/auth', router);
 app.use(errorMiddleware);
 
-const start = async () => {
+const start = () => {
 	try {
 		pool.on('error', (err) => {
 			console.error('Something bad has happened!', err.stack);

@@ -25,4 +25,4 @@ export interface ActivationPayload extends JwtPayload {
 	email: string;
 }
 
-export interface ResetPayload extends AccessPayload {}
+export type ResetPayload = AccessPayload;

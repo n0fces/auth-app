@@ -5,3 +5,4 @@ export type {
 	AccessPayload,
 	ActivationPayload,
 } from './payload_types';
+export type { AppRequest } from './request';

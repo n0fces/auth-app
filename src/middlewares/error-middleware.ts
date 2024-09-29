@@ -1,13 +1,8 @@
 import { ClientError } from 'errors/client-error';
 import { ServerError } from 'errors/server-error';
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response } from 'express';
 
-export function errorMiddleware(
-	err: Error,
-	req: Request,
-	res: Response,
-	next: NextFunction,
-) {
+export function errorMiddleware(err: Error, req: Request, res: Response) {
 	// будет логировать ошибку
 	console.log(err);
 	// * если предусмотренная нами клиентская ошибка или серверная ошибка, то отправляем её. На фронтенде

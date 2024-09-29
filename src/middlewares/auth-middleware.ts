@@ -1,6 +1,7 @@
 import { ClientError } from 'errors/client-error';
 import { NextFunction, Request, Response } from 'express';
 import { tokenModel } from 'jwt/models/token-model';
+import { isString } from 'utils/isString';
 
 // ! здесь надо подумать насчет используемой ошибки
 export function authMiddleware(
@@ -15,11 +16,13 @@ export function authMiddleware(
 		// первый раз зашел в приложение, либо он давно не заходил, поэтому
 		// у него истек и рефреш токен
 		if (!refreshToken) {
-			return next(ClientError.UnauthorizedError());
+			next(ClientError.UnauthorizedError());
+			return;
 		}
 
-		if (!accessToken) {
-			return next(ClientError.AccessTokenExpired());
+		if (!accessToken || !isString(accessToken)) {
+			next(ClientError.AccessTokenExpired());
+			return;
 		}
 
 		const userData = tokenModel.verifyAccessToken(accessToken);
@@ -27,7 +30,8 @@ export function authMiddleware(
 		req.user_id = userData.sub;
 
 		next();
-	} catch (error) {
-		return next(ClientError.UnauthorizedError());
+	} catch {
+		next(ClientError.UnauthorizedError());
+		return;
 	}
 }

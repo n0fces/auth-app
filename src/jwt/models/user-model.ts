@@ -5,6 +5,7 @@ import { ClientError } from 'errors/client-error';
 import { getUA } from 'utils/getUA';
 import { mailModel } from './mail-model';
 import { tokenModel } from './token-model';
+import { isString } from 'utils/isString';
 
 // ! очень надо разгрузить эту модель
 class UserModel {
@@ -26,22 +27,24 @@ class UserModel {
 		// напишет другой
 		const hashedPassword = await bcrypt.hash(password, 10);
 		const activationToken = tokenModel.generateActivationToken(email);
-		candidatePendingUser
-			? await pendingUsersAPI.updatePendingUserToken(
-					email,
-					activationToken,
-					hashedPassword,
-				)
-			: await pendingUsersAPI.createPendingUser(
-					email,
-					activationToken,
-					hashedPassword,
-				);
+		if (candidatePendingUser) {
+			await pendingUsersAPI.updatePendingUserToken(
+				email,
+				activationToken,
+				hashedPassword,
+			);
+		} else {
+			await pendingUsersAPI.createPendingUser(
+				email,
+				activationToken,
+				hashedPassword,
+			);
+		}
 
 		// отправляем письмо с ссылкой активации на указанную почту
 		await mailModel.sendActivationMail(
 			email,
-			`${process.env.SERVER_URL}/auth/activate/${activationToken}`,
+			`${String(process.env.SERVER_URL)}/auth/activate/${activationToken}`,
 		);
 	}
 
@@ -82,7 +85,7 @@ class UserModel {
 		await pendingUsersAPI.updatePendingUserToken(email, activationToken);
 		await mailModel.sendActivationMail(
 			email,
-			`${process.env.SERVER_URL}/auth/activate/${activationToken}`,
+			`${String(process.env.SERVER_URL)}/auth/activate/${activationToken}`,
 		);
 	}
 
@@ -124,7 +127,7 @@ class UserModel {
 			const resetToken = tokenModel.generateResetPasswordToken(id_user, email);
 			await mailModel.sendResetPasswordMail(
 				email,
-				`${process.env.SERVER_URL}/auth/reset-password-access/${resetToken}`,
+				`${String(process.env.SERVER_URL)}/auth/reset-password-access/${resetToken}`,
 			);
 		} else {
 			throw ClientError.UserNotFound();
@@ -146,10 +149,10 @@ class UserModel {
 		}
 	}
 
-	async updateRefresh(refresh: any, userAgent: string | undefined) {
+	async updateRefresh(refresh: string, userAgent: string | undefined) {
 		if (refresh) {
 			const { sub, email, jti, iat } = tokenModel.decodeRefreshToken(refresh);
-			const id_user = Number(`${sub}`);
+			const id_user = Number(sub);
 
 			const tokens = await tokenAPI.getUserByUserId(id_user);
 			const tokenSession = tokens.find((token) => token.token === refresh);
@@ -187,13 +190,15 @@ class UserModel {
 		}
 	}
 
-	async updateAccess(refreshToken: any) {
+	updateAccess(refreshToken: string) {
 		const tokenData = tokenModel.verifyRefreshToken(refreshToken);
 
 		const { sub, email } = tokenData;
-		const id_user = Number(sub as string);
-		const accessToken = tokenModel.generateAccessToken(id_user, email);
-		return accessToken;
+		if (isString(sub)) {
+			const id_user = Number(sub);
+			const accessToken = tokenModel.generateAccessToken(id_user, email);
+			return accessToken;
+		}
 	}
 
 	async getUser(userId: string) {

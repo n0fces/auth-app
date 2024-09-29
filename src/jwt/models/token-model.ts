@@ -58,11 +58,9 @@ class TokenModel {
 
 	generateAccessToken(id_user: number, email: string) {
 		const payload = this.generateAccessPayload(id_user, email);
-		const accessToken = jwt.sign(
-			payload,
-			process.env.JWT_ACCESS_SECRET as string,
-			{ expiresIn: process.env.ACCESS_TOKEN_LIFE },
-		);
+		const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_SECRET, {
+			expiresIn: process.env.ACCESS_TOKEN_LIFE,
+		});
 
 		return accessToken;
 	}
@@ -72,11 +70,9 @@ class TokenModel {
 			email,
 			uaJSON,
 		);
-		const refreshToken = jwt.sign(
-			payload,
-			process.env.JWT_REFRESH_SECRET as string,
-			{ expiresIn: process.env.REFRESH_TOKEN_LIFE },
-		);
+		const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
+			expiresIn: process.env.REFRESH_TOKEN_LIFE,
+		});
 
 		return { refreshToken, caption, userAgent };
 	}
@@ -85,7 +81,7 @@ class TokenModel {
 		const payload = this.generateActivationPayload(email);
 		const activationToken = jwt.sign(
 			payload,
-			process.env.JWT_ACTIVATION_SECRET as string,
+			process.env.JWT_ACTIVATION_SECRET,
 			{ expiresIn: process.env.ACTIVATION_TOKEN_LIFE },
 		);
 
@@ -96,7 +92,7 @@ class TokenModel {
 		const payload = this.generateResetPayload(id_user, email);
 		const resetToken = jwt.sign(
 			payload,
-			process.env.JWT_RESET_PASSWORD_SECRET as string,
+			process.env.JWT_RESET_PASSWORD_SECRET,
 			{ expiresIn: 600 },
 		);
 
@@ -107,12 +103,9 @@ class TokenModel {
 	// ! невалидных токенов. Для рефреш токенов, скорее всего, завести
 	// ! блэк лист. Для невалидных токенов доступа добавить функционал
 	// ! логирования информации об этом
-	verifyRefreshToken(refresh: any) {
+	verifyRefreshToken(refresh: string) {
 		try {
-			const userPayload = jwt.verify(
-				refresh,
-				process.env.JWT_REFRESH_SECRET as string,
-			);
+			const userPayload = jwt.verify(refresh, process.env.JWT_REFRESH_SECRET);
 			return userPayload as RefreshPayload;
 		} catch (error) {
 			if (error instanceof TokenExpiredError) {
@@ -127,10 +120,7 @@ class TokenModel {
 
 	verifyAccessToken(access: string) {
 		try {
-			const userPayload = jwt.verify(
-				access,
-				process.env.JWT_ACCESS_SECRET as string,
-			);
+			const userPayload = jwt.verify(access, process.env.JWT_ACCESS_SECRET);
 			return userPayload as AccessPayload;
 		} catch (error) {
 			if (error instanceof TokenExpiredError) {
@@ -147,7 +137,7 @@ class TokenModel {
 		try {
 			const activationPayload = jwt.verify(
 				activation,
-				process.env.JWT_ACTIVATION_SECRET as string,
+				process.env.JWT_ACTIVATION_SECRET,
 			);
 			return activationPayload as ActivationPayload;
 		} catch (error) {
@@ -169,7 +159,7 @@ class TokenModel {
 		try {
 			const resetPayload = jwt.verify(
 				token,
-				process.env.JWT_RESET_PASSWORD_SECRET as string,
+				process.env.JWT_RESET_PASSWORD_SECRET,
 			);
 			return resetPayload as ResetPayload;
 		} catch (error) {

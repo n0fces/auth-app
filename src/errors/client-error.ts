@@ -1,6 +1,6 @@
 export class ClientError extends Error {
 	status: number;
-	errors: any[];
+	errors: unknown[];
 
 	// ! надо будет подумать над типов для errors
 	constructor(
@@ -16,7 +16,7 @@ export class ClientError extends Error {
 		this.errors = errors;
 	}
 
-	static BadRequest(message: string, errors: any[] = []) {
+	static BadRequest(message: string, errors = []) {
 		return new ClientError(400, message, 'BadRequest', errors);
 	}
 
