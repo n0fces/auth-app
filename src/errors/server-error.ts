@@ -3,7 +3,12 @@ export class ServerError extends Error {
 	errors: unknown[];
 
 	// ! надо будет подумать над типов для errors
-	constructor(status: number, message: string, name: string, errors = []) {
+	constructor(
+		status: number,
+		message: string,
+		name: string,
+		errors: unknown[] = [],
+	) {
 		// вызываем родительский конструктор у Error
 		super(message);
 		this.status = status;

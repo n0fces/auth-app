@@ -22,7 +22,7 @@ const config: BuildOptions = {
 	tsconfig: resolveRoot('tsconfig.json'),
 	outdir: resolveRoot('build'),
 	entryPoints: [resolveRoot('src', 'index.ts')],
-	entryNames: isDev ? 'bundle' : '[dir]/bundle.[name]-[hash]',
+	entryNames: isDev ? 'bundle' : 'index',
 	plugins: [
 		clean({
 			patterns: ['build/*'],
