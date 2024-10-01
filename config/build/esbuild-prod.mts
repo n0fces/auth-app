@@ -5,7 +5,7 @@ const result = await esbuild.build({
 	...config,
 	define: {
 		'process.env.SERVER_URL': '"https://auth-app-rouge-three.vercel.app"',
-		'process.env.CLIENT_URL': '"https://auth-app-frontend-one.vercel.app"',
+		'process.env.CLIENT_URL': '"https://auth-app-frontend-rho.vercel.app"',
 	},
 });
 
