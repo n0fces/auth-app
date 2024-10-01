@@ -11,7 +11,6 @@ const app = express();
 const PORT = process.env.PORT;
 
 app.use(express.json());
-//
 // * не забудь, что при предоставлении секрета необходимо использовать signedCookies
 // app.use(cookieParser(process.env.COOKIE_PARSER_SECRET));
 app.use(cookieParser());
