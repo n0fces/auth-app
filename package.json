@@ -5,7 +5,8 @@
 		"start": "nodemon ./build/bundle.js",
 		"compile": "tsx ./config/build/esbuild-dev.mts",
 		"dev": "concurrently \"npm run compile\" \"npm run start\"",
-		"build": "cross-env MODE=production tsx ./config/build/esbuild-prod.mts",
+		"build:prod": "cross-env MODE=production tsx ./config/build/esbuild-prod.mts",
+		"build": "cross-env MODE=production VERCEL=vercel tsx ./config/build/esbuild-prod.mts",
 		"lint": "eslint",
 		"lint:fix": "eslint --fix",
 		"prettier": "prettier --write ."
