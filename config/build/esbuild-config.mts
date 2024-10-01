@@ -20,7 +20,7 @@ const config: BuildOptions = {
 	target: ['es2015'],
 	format: 'cjs',
 	tsconfig: resolveRoot('tsconfig.json'),
-	outdir: resolveRoot('build'),
+	outdir: isProd ? resolveRoot('build') : resolveRoot('temp'),
 	entryPoints: [resolveRoot('src', 'index.ts')],
 	entryNames: isDev ? 'bundle' : 'index',
 	plugins: [

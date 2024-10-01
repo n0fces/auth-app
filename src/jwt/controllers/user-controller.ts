@@ -3,6 +3,7 @@ import { NextFunction, Response } from 'express';
 import { tokenModel } from 'jwt/models/token-model';
 import { userModel } from 'jwt/models/user-model';
 import { AppRequest } from 'types';
+import { cookieOptions } from 'utils/cookieOptions';
 import { isString } from 'utils/isString';
 import { setCookieTokens } from 'utils/setCookie';
 import { validationResultChecker } from 'utils/validationResultChecker';
@@ -87,8 +88,8 @@ class UserController {
 			if (isString(refreshToken)) {
 				await userModel.logout(refreshToken);
 				// * Я ведь храню в куках не только refreshToken, но и accessToken
-				res.clearCookie('refreshToken');
-				res.clearCookie('accessToken');
+				res.clearCookie('refreshToken', cookieOptions());
+				res.clearCookie('accessToken', cookieOptions());
 
 				res.sendStatus(200);
 			}

@@ -10,6 +10,7 @@ export function errorMiddleware(
 	next: NextFunction,
 ) {
 	// будет логировать ошибку
+	console.error(err);
 	// * если предусмотренная нами клиентская ошибка или серверная ошибка, то отправляем её. На фронтенде
 	// * мы знаем, как ее обрабатывать
 	if (err instanceof ClientError || err instanceof ServerError) {
