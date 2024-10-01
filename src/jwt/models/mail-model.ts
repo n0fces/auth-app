@@ -12,7 +12,7 @@ class MailModel {
 			port: Number(process.env.SMTP_PORT),
 			// так как порт 587, то поставил false
 			secure: false,
-			// авторизационная информация об аккаунте, с которого будет происходить рассылка
+			// авторизационная информация об аккаунте, с которого будет происходить рассылка сообщений
 			auth: {
 				user: process.env.SMTP_USER,
 				pass: process.env.SMTP_PASSWORD,
