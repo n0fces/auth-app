@@ -6,7 +6,6 @@ import { clean } from 'esbuild-plugin-clean';
 const dirname = import.meta.dirname;
 
 const mode = process.env.MODE ?? 'development';
-const vercel = process.env.VERCEL;
 const isProd = mode === 'production';
 const isDev = !isProd;
 
@@ -21,7 +20,7 @@ const config: BuildOptions = {
 	target: ['es2015'],
 	format: 'cjs',
 	tsconfig: resolveRoot('tsconfig.json'),
-	outdir: vercel ? resolveRoot('api') : resolveRoot('build'),
+	outdir: resolveRoot('build'),
 	entryPoints: [resolveRoot('src', 'index.ts')],
 	entryNames: isDev ? 'bundle' : 'index',
 	plugins: [
