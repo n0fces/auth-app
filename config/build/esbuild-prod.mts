@@ -4,7 +4,7 @@ import config from './esbuild-config.mjs';
 const result = await esbuild.build({
 	...config,
 	define: {
-		'process.env.SERVER_URL': '"https://auth-app-jade-two.vercel.app"',
+		'process.env.SERVER_URL': '"https://auth-app-seven-plum.vercel.app"',
 		'process.env.CLIENT_URL': '"https://auth-app-frontend-rho.vercel.app"',
 	},
 });
