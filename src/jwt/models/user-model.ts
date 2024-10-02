@@ -139,21 +139,22 @@ class UserModel {
 		await userAPI.updateUserPassword(email, hashedPassword);
 	}
 
-	async logoutAllDevices(email: string) {
-		const user = await userAPI.getUserByEmail(email);
-		if (user) {
-			const { id_user } = user;
-			await tokenAPI.deleteAllTokensByUserId(id_user);
-		} else {
-			throw ClientError.UserNotFound();
-		}
-	}
+	// async logoutAllDevices(email: string) {
+	// 	const user = await userAPI.getUserByEmail(email);
+	// 	if (user) {
+	// 		const { id_user } = user;
+	// 		await tokenAPI.deleteAllTokensByUserId(id_user);
+	// 	} else {
+	// 		throw ClientError.UserNotFound();
+	// 	}
+	// }
 
 	async updateRefresh(refresh: string, userAgent: string | undefined) {
 		if (refresh) {
 			const { sub, email, jti, iat } = tokenModel.decodeRefreshToken(refresh);
 			const id_user = Number(sub);
 
+			// ! надо будет переформулировать, потому что сейчас непонятно звучит
 			const tokens = await tokenAPI.getUserByUserId(id_user);
 			const tokenSession = tokens.find((token) => token.token === refresh);
 

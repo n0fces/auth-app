@@ -146,18 +146,22 @@ class UserController {
 	async resetPassword(req: AppRequest, res: Response, next: NextFunction) {
 		try {
 			validationResultChecker(req, next);
-			const { password, logoutAllDevices, token: resetToken } = req.body;
+			const {
+				password,
+				// logoutAllDevices,
+				token: resetToken,
+			} = req.body;
 			const email =
 				isString(resetToken) && tokenModel.verifyResetToken(resetToken).email;
 
 			if (isString(email) && isString(password)) {
 				await userModel.resetPassword(email, password);
 
-				if (logoutAllDevices) {
-					userModel.logoutAllDevices(email).catch((err: unknown) => {
-						throw err;
-					});
-				}
+				// if (logoutAllDevices) {
+				// 	userModel.logoutAllDevices(email).catch((err: unknown) => {
+				// 		throw err;
+				// 	});
+				// }
 
 				res.sendStatus(200);
 			}

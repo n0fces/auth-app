@@ -17,8 +17,7 @@ ctx
 	.serve({ host: 'localhost' })
 	.then(({ host, port }) => {
 		console.log(
-			`Server is running on http://${host}:${String(port)}\n`,
-			'We are ready to develop 🔥',
+			`Server is running on http://${host}:${String(port)}\nWe are ready to develop 🔥`,
 		);
 	})
 	.catch((err: unknown) => {
