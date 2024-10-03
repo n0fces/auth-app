@@ -1,6 +1,5 @@
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
-import 'dotenv/config';
 import express from 'express';
 import { errorMiddleware } from 'middlewares/error-middleware';
 import { pool } from './db';
@@ -11,8 +10,6 @@ const app = express();
 const PORT = process.env.PORT;
 
 app.use(express.json());
-// * не забудь, что при предоставлении секрета необходимо использовать signedCookies
-// app.use(cookieParser(process.env.COOKIE_PARSER_SECRET));
 app.use(cookieParser());
 app.use(
 	cors({

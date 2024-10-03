@@ -1,6 +1,5 @@
 import { pendingUsersAPI, tokenAPI, userAPI } from 'api';
 import bcrypt from 'bcryptjs';
-import 'dotenv/config';
 import { ClientError } from 'errors/client-error';
 import { getUA } from 'utils/getUA';
 import { mailModel } from './mail-model';
@@ -48,8 +47,8 @@ class UserModel {
 		);
 	}
 
-	// * этот метод нужно очень качественно задокументировать
 	async activate(activationToken: string, userAgent: string | undefined) {
+		// верификация токена активации
 		const payload = tokenModel.verifyActivationToken(activationToken);
 		const { email } = payload;
 		const pendingUser = await pendingUsersAPI.getPendingUserByEmail(email);
@@ -57,16 +56,20 @@ class UserModel {
 			const { id_user, email, password, activation_token } = pendingUser;
 
 			if (activation_token === activationToken) {
+				// очищаем пользователя из таблицы pending_users
 				await pendingUsersAPI.deletePendingUserById(id_user);
+				// добавляем в таблицы users
 				await userAPI.createUser(id_user, email, password);
 
 				const uaJSON = getUA(userAgent);
+				// генерируем токены доступа и рефреш
 				const accessToken = tokenModel.generateAccessToken(id_user, email);
 				const {
 					refreshToken,
 					caption,
 					userAgent: userAgentDB,
 				} = tokenModel.generateRefreshToken(id_user, email, uaJSON);
+				// сохраняем refresh токен (сессию пользователя)
 				await tokenAPI.createToken(id_user, refreshToken, caption, userAgentDB);
 
 				return { accessToken, refreshToken };
@@ -76,13 +79,18 @@ class UserModel {
 				);
 			}
 		} else {
+			// если токен активации валиден (не истек и не подделан), но пользователя нет в таблице,
+			// значит он уже активировал аккаунт
 			throw ClientError.UserAlreadyExisted();
 		}
 	}
 
 	async resendActivationLink(email: string) {
+		// генерируем новый токен
 		const activationToken = tokenModel.generateActivationToken(email);
+		// обновляем его в базе данных pending_users
 		await pendingUsersAPI.updatePendingUserToken(email, activationToken);
+		// отправляем письмо с новой ссылкой активации на указанную почту
 		await mailModel.sendActivationMail(
 			email,
 			`${String(process.env.SERVER_URL)}/auth/activate/${activationToken}`,
@@ -90,6 +98,7 @@ class UserModel {
 	}
 
 	async login(email: string, password: string, userAgent: string | undefined) {
+		// пользователь должен иметь верифицированный аккаунт
 		const user = await userAPI.getUserByEmail(email);
 		if (user) {
 			const { id_user, password: passwordBD } = user;
@@ -99,11 +108,13 @@ class UserModel {
 			if (isPasswordValid) {
 				const uaJSON = getUA(userAgent);
 				const accessToken = tokenModel.generateAccessToken(id_user, email);
+				// генерируем refresh токен
 				const {
 					refreshToken,
 					caption,
 					userAgent: userAgentDB,
 				} = tokenModel.generateRefreshToken(id_user, email, uaJSON);
+				// создаем новую сессию для пользователя
 				await tokenAPI.createToken(id_user, refreshToken, caption, userAgentDB);
 
 				return { accessToken, refreshToken };
@@ -121,10 +132,13 @@ class UserModel {
 	}
 
 	async forgotPassword(email: string) {
+		// находим пользователя, который забыл пароль
 		const user = await userAPI.getUserByEmail(email);
 		if (user) {
 			const { id_user } = user;
+			// генерируем новый токен для сброса пароля
 			const resetToken = tokenModel.generateResetPasswordToken(id_user, email);
+			// отправляем токен для сброса пароля
 			await mailModel.sendResetPasswordMail(
 				email,
 				`${String(process.env.SERVER_URL)}/auth/reset-password-access/${resetToken}`,
@@ -154,12 +168,13 @@ class UserModel {
 			const { sub, email, jti, iat } = tokenModel.decodeRefreshToken(refresh);
 			const id_user = Number(sub);
 
-			// ! надо будет переформулировать, потому что сейчас непонятно звучит
-			const tokens = await tokenAPI.getUserByUserId(id_user);
+			const tokens = await tokenAPI.getTokensByUserId(id_user);
+			// находим конкретную сессию, которая интересует для конкретного пользователя
 			const tokenSession = tokens.find((token) => token.token === refresh);
 
 			const uaJSON = getUA(userAgent);
 
+			// проверяем декодированные значения с тем, что было в базе данных
 			const isEqualCaption = tokenSession?.caption === jti;
 			const isEqualUpdatedTime = tokenSession?.updated_at.getTime() === iat;
 			const isEqualUserAgent = tokenSession?.user_agent === uaJSON;
@@ -179,24 +194,24 @@ class UserModel {
 				await tokenAPI.updateTokenByUserId(id_user, refreshToken);
 
 				return { accessToken, refreshToken };
-				// ! в обоих этих else на самом деле не буду прокидывать ошибку, а отдельно буду обрабатывать это
 			} else {
 				// ! здесь надо будет добавить логику, связанную с блэк-листом
 				// ! здесь надо добавить логику с логированием
 				throw ClientError.ForbiddenError();
 			}
 		} else {
-			// ! здесь надо добавить логику с логированиемuser
 			throw ClientError.UnauthorizedError();
 		}
 	}
 
 	updateAccess(refreshToken: string) {
+		// проверка пришедшего refresh токена
 		const tokenData = tokenModel.verifyRefreshToken(refreshToken);
 
 		const { sub, email } = tokenData;
 		if (isString(sub)) {
 			const id_user = Number(sub);
+			// генерация нового токена доступа
 			const accessToken = tokenModel.generateAccessToken(id_user, email);
 			return accessToken;
 		}

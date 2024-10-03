@@ -15,6 +15,7 @@ export const query = async <R extends QueryResultRow = any, I = any[]>(
 		const res = await cn.query(queryTextOrConfig, values);
 		return res;
 	} finally {
+		// Метод release на полученном клиенте возвращает его обратно в пул
 		cn.release();
 	}
 };

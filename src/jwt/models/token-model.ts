@@ -1,5 +1,4 @@
 import { tokenAPI } from 'api';
-import 'dotenv/config';
 import { ClientError } from 'errors/client-error';
 import jwt, { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
 import { AccessPayload, ActivationPayload, RefreshPayload } from 'types';
@@ -99,10 +98,6 @@ class TokenModel {
 		return resetToken;
 	}
 
-	// ! в методах проверки токенов на валидность надо проработать кейсы
-	// ! невалидных токенов. Для рефреш токенов, скорее всего, завести
-	// ! блэк лист. Для невалидных токенов доступа добавить функционал
-	// ! логирования информации об этом
 	verifyRefreshToken(refresh: string) {
 		try {
 			const userPayload = jwt.verify(refresh, process.env.JWT_REFRESH_SECRET);

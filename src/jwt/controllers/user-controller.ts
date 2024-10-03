@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import { NextFunction, Response } from 'express';
 import { tokenModel } from 'jwt/models/token-model';
 import { userModel } from 'jwt/models/user-model';
@@ -53,8 +52,6 @@ class UserController {
 				await userModel.resendActivationLink(email);
 			}
 
-			// * когда клиент получит 200 статус код, то на этой же странице напишем
-			// * одну строчку, что ссылка на активацию была отправлена
 			res.sendStatus(200);
 		} catch (error) {
 			next(error);
@@ -83,11 +80,11 @@ class UserController {
 
 	async logout(req: AppRequest, res: Response, next: NextFunction) {
 		try {
-			// const { refreshToken } = req.signedCookies;
 			const { refreshToken } = req.cookies;
 			if (isString(refreshToken)) {
 				await userModel.logout(refreshToken);
-				// * Я ведь храню в куках не только refreshToken, но и accessToken
+
+				// в куках хранится refresh и access токены
 				res.clearCookie('refreshToken', cookieOptions());
 				res.clearCookie('accessToken', cookieOptions());
 
@@ -121,7 +118,6 @@ class UserController {
 			const { token } = req.body;
 			if (isString(token)) {
 				const { email } = tokenModel.decodeResetToken(token);
-				// * да там лишний поиск по бд, но хотя бы сейчас код переиспользуется. Потом может это исправлю
 				await userModel.forgotPassword(email);
 
 				res.sendStatus(200);
@@ -170,10 +166,8 @@ class UserController {
 		}
 	}
 
-	// * для обновления refresh токена
 	async refresh(req: AppRequest, res: Response, next: NextFunction) {
 		try {
-			// const { refreshToken: refresh } = req.signedCookies;
 			const { refreshToken: refresh } = req.cookies;
 			const userAgent = req.headers['user-agent'];
 			if (isString(refresh)) {
@@ -190,10 +184,8 @@ class UserController {
 		}
 	}
 
-	// * для обновления access токена
 	access(req: AppRequest, res: Response, next: NextFunction) {
 		try {
-			// const { refreshToken: refresh } = req.signedCookies;
 			const { refreshToken } = req.cookies;
 			if (isString(refreshToken)) {
 				const accessToken = userModel.updateAccess(refreshToken);

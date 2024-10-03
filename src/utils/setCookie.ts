@@ -7,13 +7,16 @@ interface setCookieTokensProps {
 	refreshToken?: string;
 }
 
+/**
+ * Функция по установке refreshToken и accessToken в cookies пользователя
+ * @param {setCookieTokensProps} - Принимает объект аргументов, необходимых для установления токенов.
+ * Устанавливает те токены, которые были переданы
+ */
 export const setCookieTokens = ({
 	res,
 	accessToken,
 	refreshToken,
 }: setCookieTokensProps) => {
-	// если используем https, то можно также добавить опцию secure
-	// ! возможно придется еще ставить опцию samesite для обеспечения безопасности от межсайтовых атак
 	if (refreshToken) {
 		res.cookie('refreshToken', refreshToken, {
 			maxAge: Number(process.env.REFRESH_TOKEN_LIFE),
@@ -24,7 +27,6 @@ export const setCookieTokens = ({
 		res.cookie('accessToken', accessToken, {
 			maxAge: Number(process.env.ACCESS_TOKEN_LIFE),
 			...cookieOptions(),
-			// sameSite: 'none',
 		});
 	}
 };

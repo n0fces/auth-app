@@ -4,7 +4,6 @@ import { NextFunction, Request, Response } from 'express';
 import { tokenModel } from 'jwt/models/token-model';
 import { isString } from 'utils/isString';
 
-// ! здесь надо подумать насчет используемой ошибки
 export function authMiddleware(
 	req: Request,
 	res: Response,
@@ -20,10 +19,12 @@ export function authMiddleware(
 			return next(ClientError.UnauthorizedError());
 		}
 
+		// если токен не пришел, значит он истек
 		if (!accessToken || !isString(accessToken)) {
 			return next(ClientError.AccessTokenExpired());
 		}
 
+		// верификация токена
 		const userData = tokenModel.verifyAccessToken(accessToken);
 
 		req.user_id = userData.sub;

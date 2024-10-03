@@ -13,7 +13,7 @@ class TokenAPI {
 			[id_user, token, caption, userAgentDB],
 		);
 	}
-	async getUserByUserId(id_user: number) {
+	async getTokensByUserId(id_user: number) {
 		const result = await query<Token>(
 			'SELECT * FROM tokens WHERE id_user = $1',
 			[id_user],

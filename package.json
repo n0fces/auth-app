@@ -2,9 +2,9 @@
 	"name": "auth-app",
 	"version": "1.0.0",
 	"scripts": {
-		"start": "nodemon ./temp/bundle.js",
 		"compile": "tsx ./config/build/esbuild-dev.mts",
-		"build": "cross-env MODE=production tsx ./config/build/esbuild-prod.mts",
+		"start": "dotenvx run -- nodemon ./temp/bundle.js",
+		"build": "dotenvx run -- cross-env MODE=production tsx ./config/build/esbuild-prod.mts",
 		"build:vercel": "npm run build && vercel --prod",
 		"lint": "eslint",
 		"lint:fix": "eslint --fix",
@@ -29,7 +29,6 @@
 		"@types/ua-parser-js": "^0.7.39",
 		"@types/uuid": "^10.0.0",
 		"@typescript-eslint/parser": "^8.7.0",
-		"concurrently": "^9.0.1",
 		"cross-env": "^7.0.3",
 		"esbuild": "0.23.0",
 		"esbuild-plugin-clean": "^1.0.1",
@@ -46,10 +45,10 @@
 		"typescript-eslint": "^8.0.0"
 	},
 	"dependencies": {
+		"@dotenvx/dotenvx": "^1.14.2",
 		"bcryptjs": "^2.4.3",
 		"cookie-parser": "^1.4.6",
 		"cors": "^2.8.5",
-		"dotenv": "^16.4.5",
 		"express": "^4.20.0",
 		"express-validator": "^7.2.0",
 		"jsonwebtoken": "^9.0.2",
