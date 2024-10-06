@@ -147,11 +147,13 @@ class UserController {
 				// logoutAllDevices,
 				token: resetToken,
 			} = req.body;
-			const email =
-				isString(resetToken) && tokenModel.verifyResetToken(resetToken).email;
 
-			if (isString(email) && isString(password)) {
-				await userModel.resetPassword(email, password);
+			if (isString(resetToken)) {
+				tokenModel.verifyResetToken(resetToken);
+				const email = tokenModel.verifyResetToken(resetToken).email;
+				if (isString(email) && isString(password)) {
+					await userModel.resetPassword(email, password);
+				}
 
 				// if (logoutAllDevices) {
 				// 	userModel.logoutAllDevices(email).catch((err: unknown) => {
